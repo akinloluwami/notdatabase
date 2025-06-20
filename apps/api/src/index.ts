@@ -3,8 +3,31 @@ import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { apiKeyAuth } from "./middleware/auth";
 import { turso } from "./lib/turso";
+import { validateAgainstSchema } from "./lib/schema";
 
 const app = new Hono();
+
+app.post("/schema/:collection", apiKeyAuth, async (c) => {
+  const dbId = c.get("dbId");
+  const collection = c.req.param("collection");
+
+  const schema = await c.req.json();
+
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) {
+    return c.json({ error: "Schema must be a JSON object" }, 400);
+  }
+
+  await turso.execute({
+    sql: `
+      INSERT INTO collection_schema (db_id, collection, schema)
+      VALUES (?, ?, ?)
+      ON CONFLICT(db_id, collection) DO UPDATE SET schema = excluded.schema
+    `,
+    args: [dbId, collection, JSON.stringify(schema)],
+  });
+
+  return c.json({ message: "Schema saved." });
+});
 
 app.post("/:collection/docs", apiKeyAuth, async (c) => {
   const collection = c.req.param("collection");
@@ -12,16 +35,36 @@ app.post("/:collection/docs", apiKeyAuth, async (c) => {
   if (!dbId) return c.json({ error: "Missing dbId" }, 401);
 
   const body = await c.req.json();
-
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return c.json({ error: "Invalid JSON body" }, 400);
   }
 
   const { unique, ...data } = body;
 
+  // 🧠 Schema validation
+  const { rows: schemaRows } = await turso.execute({
+    sql: `SELECT schema FROM collection_schema WHERE db_id = ? AND collection = ? LIMIT 1`,
+    args: [dbId, collection],
+  });
+
+  if (schemaRows.length > 0) {
+    let schema;
+    const schemaValue = schemaRows[0].schema;
+    if (typeof schemaValue !== "string") {
+      return c.json({ error: "Collection schema is not valid JSON" }, 500);
+    }
+    try {
+      schema = JSON.parse(schemaValue);
+    } catch {
+      return c.json({ error: "Collection schema is not valid JSON" }, 500);
+    }
+
+    const err = validateAgainstSchema(data, schema);
+    if (err) return c.json({ error: err }, 400);
+  }
+
   const now = new Date().toISOString();
-  const id = nanoid();
-  const key = body.key ?? id;
+  const key = body.key ?? nanoid();
 
   const doc = {
     ...data,
@@ -30,6 +73,7 @@ app.post("/:collection/docs", apiKeyAuth, async (c) => {
     updatedAt: now,
   };
 
+  // 🔐 Unique field constraint check
   if (Array.isArray(unique)) {
     for (const field of unique) {
       const value = data[field];
@@ -56,6 +100,7 @@ app.post("/:collection/docs", apiKeyAuth, async (c) => {
     }
   }
 
+  // ✅ Save to kv_store
   try {
     await turso.execute({
       sql: `
