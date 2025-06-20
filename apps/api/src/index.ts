@@ -261,6 +261,9 @@ app.get("/:collection/docs/:id", apiKeyAuth, async (c) => {
   const collection = c.req.param("collection");
   const id = c.req.param("id");
 
+  const selectParam = new URL(c.req.url).searchParams.get("select");
+  const selectedFields = selectParam?.split(",").map((f) => f.trim());
+
   const { rows } = await turso.execute({
     sql: `
       SELECT value FROM kv_store
@@ -274,12 +277,24 @@ app.get("/:collection/docs/:id", apiKeyAuth, async (c) => {
     return c.json({ error: "Document not found" }, 404);
   }
 
-  const value = rows[0].value;
-  if (typeof value !== "string") {
+  const rawValue = rows[0].value;
+  if (typeof rawValue !== "string") {
     return c.json({ error: "Invalid document value" }, 500);
   }
 
-  return c.json(JSON.parse(value));
+  const doc = JSON.parse(rawValue);
+
+  if (selectedFields && selectedFields.length > 0) {
+    const selectedDoc: Record<string, any> = {};
+    for (const field of selectedFields) {
+      if (field in doc) {
+        selectedDoc[field] = doc[field];
+      }
+    }
+    return c.json(selectedDoc);
+  }
+
+  return c.json(doc);
 });
 
 app.patch("/:collection/docs/:id", apiKeyAuth, async (c) => {
