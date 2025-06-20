@@ -129,6 +129,96 @@ app.get("/:collection/docs", apiKeyAuth, async (c) => {
   }
 });
 
+app.get("/:collection/docs/:id", apiKeyAuth, async (c) => {
+  const dbId = c.get("dbId");
+  const collection = c.req.param("collection");
+  const id = c.req.param("id");
+
+  const { rows } = await turso.execute({
+    sql: `
+      SELECT value FROM kv_store
+      WHERE db_id = ? AND collection = ? AND key = ?
+      LIMIT 1
+    `,
+    args: [dbId, collection, id],
+  });
+
+  if (rows.length === 0) {
+    return c.json({ error: "Document not found" }, 404);
+  }
+
+  const value = rows[0].value;
+  if (typeof value !== "string") {
+    return c.json({ error: "Invalid document value" }, 500);
+  }
+
+  return c.json(JSON.parse(value));
+});
+
+app.patch("/:collection/docs/:id", apiKeyAuth, async (c) => {
+  const dbId = c.get("dbId");
+  const collection = c.req.param("collection");
+  const id = c.req.param("id");
+  const body = await c.req.json();
+
+  const { rows } = await turso.execute({
+    sql: `
+      SELECT value FROM kv_store
+      WHERE db_id = ? AND collection = ? AND key = ?
+      LIMIT 1
+    `,
+    args: [dbId, collection, id],
+  });
+
+  if (rows.length === 0) {
+    return c.json({ error: "Document not found" }, 404);
+  }
+
+  const value = rows[0].value;
+  if (typeof value !== "string") {
+    return c.json({ error: "Invalid document value" }, 500);
+  }
+
+  const existing = JSON.parse(value);
+
+  const updated = {
+    ...existing,
+    ...body,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await turso.execute({
+    sql: `
+      UPDATE kv_store
+      SET value = ?, updated_at = ?
+      WHERE db_id = ? AND collection = ? AND key = ?
+    `,
+    args: [JSON.stringify(updated), updated.updatedAt, dbId, collection, id],
+  });
+
+  return c.json(updated);
+});
+
+app.delete("/:collection/docs/:id", apiKeyAuth, async (c) => {
+  const dbId = c.get("dbId");
+  const collection = c.req.param("collection");
+  const id = c.req.param("id");
+
+  const { rowsAffected } = await turso.execute({
+    sql: `
+      DELETE FROM kv_store
+      WHERE db_id = ? AND collection = ? AND key = ?
+    `,
+    args: [dbId, collection, id],
+  });
+
+  if (rowsAffected === 0) {
+    return c.json({ error: "Document not found" }, 404);
+  }
+
+  return c.json({ message: "Document deleted" });
+});
+
 serve(
   {
     fetch: app.fetch,
