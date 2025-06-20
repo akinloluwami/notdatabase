@@ -1,5 +1,13 @@
 import type { MiddlewareHandler } from "hono";
 import { turso } from "../lib/turso.js";
+import "hono";
+
+declare module "hono" {
+  interface ContextVariableMap {
+    dbId: string;
+    userId: string;
+  }
+}
 
 export const apiKeyAuth: MiddlewareHandler = async (c, next) => {
   const auth = c.req.header("authorization");
