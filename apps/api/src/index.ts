@@ -6,10 +6,6 @@ import { turso } from "./lib/turso";
 
 const app = new Hono();
 
-app.get("/", (c) => {
-  return c.text("Hello Hono!");
-});
-
 app.post("/:collection/docs", apiKeyAuth, async (c) => {
   const collection = c.req.param("collection");
   const dbId = c.get("dbId");
@@ -164,7 +160,7 @@ app.get("/:collection/docs", apiKeyAuth, async (c) => {
   const limit = parseInt(query.get("limit") || "50");
   const offset = parseInt(query.get("offset") || "0");
 
-  const filters: [string, string][] = [];
+  const filters: [string, any][] = [];
 
   for (const [key, value] of query.entries()) {
     if (key.startsWith("filter[")) {
@@ -192,12 +188,21 @@ app.get("/:collection/docs", apiKeyAuth, async (c) => {
     args.push(`$.${field}`, value);
   }
 
-  sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+  const sort = query.get("sort");
+  if (sort) {
+    const desc = sort.startsWith("-");
+    const field = desc ? sort.slice(1) : sort;
+    sql += ` ORDER BY json_extract(value, ?) ${desc ? "DESC" : "ASC"}`;
+    args.push(`$.${field}`);
+  } else {
+    sql += ` ORDER BY created_at DESC`;
+  }
+
+  sql += ` LIMIT ? OFFSET ?`;
   args.push(limit, offset);
 
   try {
     const { rows } = await turso.execute({ sql, args });
-
     const docs = rows.map((row: any) => JSON.parse(row.value));
     return c.json(docs);
   } catch (err) {
