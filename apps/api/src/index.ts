@@ -76,6 +76,85 @@ app.post("/:collection/docs", apiKeyAuth, async (c) => {
   }
 });
 
+app.post("/:collection/bulk", apiKeyAuth, async (c) => {
+  const collection = c.req.param("collection");
+  const dbId = c.get("dbId");
+  if (!dbId) return c.json({ error: "Missing dbId" }, 401);
+
+  const body = await c.req.json();
+
+  if (!Array.isArray(body)) {
+    return c.json({ error: "Expected an array of documents" }, 400);
+  }
+
+  const now = new Date().toISOString();
+  const insertedDocs: any[] = [];
+
+  // Start building bulk insert
+  const sqlChunks: string[] = [];
+  const args: any[] = [];
+
+  for (const raw of body) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return c.json({ error: "Each document must be a valid object" }, 400);
+    }
+
+    const { unique, ...data } = raw;
+    const id = raw.key ?? nanoid();
+
+    // 💥 Check uniqueness
+    if (Array.isArray(unique)) {
+      for (const field of unique) {
+        const value = data[field];
+        if (typeof value === "undefined") continue;
+
+        const { rows } = await turso.execute({
+          sql: `
+            SELECT id FROM kv_store
+            WHERE db_id = ? AND collection = ?
+            AND json_extract(value, ?) = ?
+            LIMIT 1
+          `,
+          args: [dbId, collection, `$.${field}`, value],
+        });
+
+        if (rows.length > 0) {
+          return c.json(
+            { error: `Unique field violation — '${field}' already exists.` },
+            409
+          );
+        }
+      }
+    }
+
+    const doc = {
+      ...data,
+      _id: id,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    sqlChunks.push(`(?, ?, ?, ?, ?, ?, ?)`);
+    args.push(id, dbId, collection, id, JSON.stringify(doc), now, now);
+    insertedDocs.push(doc);
+  }
+
+  try {
+    await turso.execute({
+      sql: `
+        INSERT INTO kv_store (id, db_id, collection, key, value, created_at, updated_at)
+        VALUES ${sqlChunks.join(",")}
+      `,
+      args,
+    });
+
+    return c.json(insertedDocs, 201);
+  } catch (err) {
+    console.error("Bulk insert failed", err);
+    return c.json({ error: "Bulk insert failed" }, 500);
+  }
+});
+
 app.get("/:collection/docs", apiKeyAuth, async (c) => {
   const collection = c.req.param("collection");
   const dbId = c.get("dbId");
