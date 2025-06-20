@@ -90,7 +90,6 @@ app.post("/:collection/bulk", apiKeyAuth, async (c) => {
   const now = new Date().toISOString();
   const insertedDocs: any[] = [];
 
-  // Start building bulk insert
   const sqlChunks: string[] = [];
   const args: any[] = [];
 
@@ -102,7 +101,6 @@ app.post("/:collection/bulk", apiKeyAuth, async (c) => {
     const { unique, ...data } = raw;
     const id = raw.key ?? nanoid();
 
-    // 💥 Check uniqueness
     if (Array.isArray(unique)) {
       for (const field of unique) {
         const value = data[field];
@@ -296,6 +294,51 @@ app.delete("/:collection/docs/:id", apiKeyAuth, async (c) => {
   }
 
   return c.json({ message: "Document deleted" });
+});
+
+app.get("/:collection/count", apiKeyAuth, async (c) => {
+  const collection = c.req.param("collection");
+  const dbId = c.get("dbId");
+  if (!dbId) return c.json({ error: "Missing dbId" }, 401);
+
+  const url = new URL(c.req.url);
+  const query = url.searchParams;
+
+  const filters: [string, any][] = [];
+
+  for (const [key, value] of query.entries()) {
+    if (key.startsWith("filter[")) {
+      const field = key.slice(7, -1);
+      let parsed: any = value;
+
+      if (value === "true") parsed = true;
+      else if (value === "false") parsed = false;
+      else if (!isNaN(Number(value))) parsed = Number(value);
+
+      filters.push([field, parsed]);
+    }
+  }
+
+  let sql = `
+    SELECT COUNT(*) as count
+    FROM kv_store
+    WHERE db_id = ? AND collection = ?
+  `;
+
+  const args: any[] = [dbId, collection];
+
+  for (const [field, value] of filters) {
+    sql += ` AND json_extract(value, ?) = ?`;
+    args.push(`$.${field}`, value);
+  }
+
+  try {
+    const { rows } = await turso.execute({ sql, args });
+    return c.json({ count: rows[0].count });
+  } catch (err) {
+    console.error("Failed to count docs with filters", err);
+    return c.json({ error: "Failed to count documents" }, 500);
+  }
 });
 
 serve(
