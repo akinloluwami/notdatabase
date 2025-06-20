@@ -1,28 +1,32 @@
 {
   "name": "web",
   "version": "0.1.0",
-  "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
+    "dev": "next dev --port 6565",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@repo/ui": "workspace:*",
-    "next": "^15.3.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "@libsql/client": "^0.15.9",
+    "@libsql/kysely-libsql": "^0.4.1",
+    "@tanstack/react-query": "^5.80.10",
+    "better-auth": "^1.2.9",
+    "better-sqlite3": "^11.10.0",
+    "kysely": "^0.28.2",
+    "next": "15.3.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
-    "@types/node": "^22.15.3",
-    "@types/react": "19.1.0",
-    "@types/react-dom": "19.1.1",
-    "eslint": "^9.29.0",
-    "typescript": "5.8.2"
+    "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "raw-loader": "^4.0.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
