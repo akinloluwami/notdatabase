@@ -3,6 +3,8 @@ import {
   SchemaDefinition,
   JSONSchema,
   InferSchemaProps,
+  SelectFields,
+  InferSelected,
 } from "./types.js";
 import {
   getRequiredFields,
@@ -30,12 +32,16 @@ export function createClient<S extends SchemaDefinition>(
   return handler as {
     [K in keyof S]: {
       insert: (data: InferSchemaProps<S[K]["properties"]>) => Promise<any>;
-      findMany: (options?: {
+      find: (options?: {
         filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
         sort?: string;
         limit?: number;
         offset?: number;
       }) => Promise<any[]>;
+      get: <Select extends SelectFields<InferSchemaProps<S[K]["properties"]>>>(
+        id: string,
+        options?: { select?: Select }
+      ) => Promise<InferSelected<InferSchemaProps<S[K]["properties"]>, Select>>;
     };
   };
 }
@@ -80,7 +86,7 @@ class CollectionClient {
     return res.json();
   }
 
-  async findMany(options?: {
+  async find(options?: {
     filter?: Record<string, string | number | boolean>;
     sort?: string;
     limit?: number;
@@ -115,6 +121,36 @@ class CollectionClient {
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.error ?? "Failed to fetch documents");
+    }
+
+    return res.json();
+  }
+
+  async get<Select extends SelectFields<any>>(
+    id: string,
+    options?: { select?: Select }
+  ): Promise<any> {
+    const url = new URL(`${this.baseUrl}/${this.collection}/docs/${id}`);
+
+    const selectedFields = new Set<string>();
+
+    if (options?.select) {
+      for (const [key, value] of Object.entries(options.select)) {
+        if (value) selectedFields.add(key);
+      }
+    }
+
+    url.searchParams.set("select", Array.from(selectedFields).join(","));
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error ?? "Failed to fetch document");
     }
 
     return res.json();
