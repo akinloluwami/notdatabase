@@ -4,7 +4,11 @@ import {
   JSONSchema,
   InferSchemaProps,
 } from "./types.js";
-import { getRequiredFields, getUniqueFields } from "./utils.js";
+import {
+  getRequiredFields,
+  getUniqueFields,
+  applyDefaultValues,
+} from "./utils.js";
 
 const DEFAULT_BASE_URL = "http://localhost:3344";
 
@@ -26,34 +30,32 @@ export function createClient<S extends SchemaDefinition>(
   return handler as {
     [K in keyof S]: {
       insert: (data: InferSchemaProps<S[K]["properties"]>) => Promise<any>;
+      findMany: (options?: {
+        filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
+        sort?: string;
+        limit?: number;
+        offset?: number;
+      }) => Promise<any[]>;
     };
   };
 }
 
 class CollectionClient {
-  private collection: string;
-  private baseUrl: string;
-  private apiKey: string;
-  private schema: JSONSchema;
-
   constructor(
-    collection: string,
-    baseUrl: string,
-    apiKey: string,
-    schema: JSONSchema
-  ) {
-    this.collection = collection;
-    this.baseUrl = baseUrl;
-    this.apiKey = apiKey;
-    this.schema = schema;
-  }
+    private collection: string,
+    private baseUrl: string,
+    private apiKey: string,
+    private schema: JSONSchema
+  ) {}
 
   async insert(data: Record<string, any>) {
     const required = getRequiredFields(this.schema);
     const unique = getUniqueFields(this.schema);
 
+    const payload = applyDefaultValues(this.schema, { ...data });
+
     for (const field of required) {
-      if (!(field in data)) {
+      if (!(field in payload)) {
         throw new Error(`Missing required field: ${field}`);
       }
     }
@@ -65,7 +67,7 @@ class CollectionClient {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        ...data,
+        ...payload,
         unique,
       }),
     });
@@ -73,6 +75,46 @@ class CollectionClient {
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.error ?? "Insert failed");
+    }
+
+    return res.json();
+  }
+
+  async findMany(options?: {
+    filter?: Record<string, string | number | boolean>;
+    sort?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<any[]> {
+    const url = new URL(`${this.baseUrl}/${this.collection}/docs`);
+
+    if (options?.filter) {
+      for (const [key, value] of Object.entries(options.filter)) {
+        url.searchParams.append(`filter[${key}]`, String(value));
+      }
+    }
+
+    if (options?.sort) {
+      url.searchParams.append("sort", options.sort);
+    }
+
+    if (options?.limit) {
+      url.searchParams.append("limit", String(options.limit));
+    }
+
+    if (options?.offset) {
+      url.searchParams.append("offset", String(options.offset));
+    }
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error ?? "Failed to fetch documents");
     }
 
     return res.json();
