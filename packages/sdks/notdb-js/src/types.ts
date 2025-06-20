@@ -1,7 +1,7 @@
 type SystemFields = {
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
+  _id?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type JSONFieldType = "string" | "number" | "boolean";
