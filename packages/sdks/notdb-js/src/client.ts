@@ -42,6 +42,17 @@ export function createClient<S extends SchemaDefinition>(
         id: string,
         options?: { select?: Select }
       ) => Promise<InferSelected<InferSchemaProps<S[K]["properties"]>, Select>>;
+      update: (
+        id: string,
+        data: Partial<InferSchemaProps<S[K]["properties"]>>
+      ) => Promise<any>;
+      delete: (id: string) => Promise<any>;
+      insertBulk: (
+        data: InferSchemaProps<S[K]["properties"]>[]
+      ) => Promise<any>;
+      count: (options?: {
+        filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
+      }) => Promise<number>;
     };
   };
 }
@@ -154,5 +165,108 @@ class CollectionClient {
     }
 
     return res.json();
+  }
+
+  async update(id: string, data: Partial<InferSchemaProps<any>>) {
+    const payload = {
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const res = await fetch(`${this.baseUrl}/${this.collection}/docs/${id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error ?? "Update failed");
+    }
+
+    return res.json();
+  }
+
+  async delete(id: string) {
+    const res = await fetch(`${this.baseUrl}/${this.collection}/docs/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error ?? "Delete failed");
+    }
+
+    return res.json();
+  }
+
+  async insertBulk(data: Record<string, any>[]) {
+    const required = getRequiredFields(this.schema);
+    const unique = getUniqueFields(this.schema);
+
+    const payload = data.map((doc) => {
+      const withDefaults = applyDefaultValues(this.schema, { ...doc });
+
+      for (const field of required) {
+        if (!(field in withDefaults)) {
+          throw new Error(
+            `Missing required field '${field}' in one of the documents.`
+          );
+        }
+      }
+
+      return {
+        ...withDefaults,
+        unique,
+      };
+    });
+
+    const res = await fetch(`${this.baseUrl}/${this.collection}/bulk`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error ?? "Insert bulk failed");
+    }
+
+    return res.json();
+  }
+
+  async count(options?: {
+    filter?: Record<string, string | number | boolean>;
+  }): Promise<number> {
+    const url = new URL(`${this.baseUrl}/${this.collection}/count`);
+
+    if (options?.filter) {
+      for (const [key, value] of Object.entries(options.filter)) {
+        url.searchParams.append(`filter[${key}]`, String(value));
+      }
+    }
+
+    const res = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error ?? "Failed to fetch count");
+    }
+
+    const json = await res.json();
+    return json.count;
   }
 }
