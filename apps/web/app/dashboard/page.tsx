@@ -24,7 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Settings, Database } from "lucide-react";
+import { Home, Settings, Database, Loader2 } from "lucide-react";
 
 export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,7 +106,12 @@ export default function DashboardPage() {
           </header>
           <main>
             {isDbLoading ? (
-              <p>Loading databases...</p>
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-400">Loading databases...</p>
+                </div>
+              </div>
             ) : isDbError ? (
               <p className="text-red-400">{(dbError as Error).message}</p>
             ) : databases && databases.length > 0 ? (
