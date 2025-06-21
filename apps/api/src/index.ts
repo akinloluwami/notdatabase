@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { apiKeyAuth } from "./middleware/auth";
 import { turso } from "./lib/turso";
 import { validateAgainstSchema } from "./lib/schema";
+import { logDbEvent } from "./lib/log-event";
 
 const app = new Hono();
 
@@ -24,6 +25,13 @@ app.post("/schema/:collection", apiKeyAuth, async (c) => {
       ON CONFLICT(db_id, collection) DO UPDATE SET schema = excluded.schema
     `,
     args: [dbId, collection, JSON.stringify(schema)],
+  });
+
+  await logDbEvent({
+    dbId,
+    collection,
+    action: "UPDATE",
+    docId: undefined,
   });
 
   return c.json({ message: "Schema saved." });
@@ -110,6 +118,13 @@ app.post("/:collection/docs", apiKeyAuth, async (c) => {
       args: [key, dbId, collection, key, JSON.stringify(doc), now, now],
     });
 
+    await logDbEvent({
+      dbId,
+      collection,
+      action: "CREATE",
+      docId: key,
+    });
+
     return c.json(doc, 201);
   } catch (err: any) {
     console.error("Insert failed", err);
@@ -187,6 +202,14 @@ app.post("/:collection/bulk", apiKeyAuth, async (c) => {
       args,
     });
 
+    // Log bulk insert event
+    await logDbEvent({
+      dbId,
+      collection,
+      action: "CREATE",
+      docId: undefined, // For bulk operations, we don't track individual doc IDs
+    });
+
     return c.json(insertedDocs, 201);
   } catch (err) {
     console.error("Bulk insert failed", err);
@@ -249,6 +272,14 @@ app.get("/:collection/docs", apiKeyAuth, async (c) => {
   try {
     const { rows } = await turso.execute({ sql, args });
     const docs = rows.map((row: any) => JSON.parse(row.value));
+
+    await logDbEvent({
+      dbId,
+      collection,
+      action: "READ",
+      docId: undefined,
+    });
+
     return c.json(docs);
   } catch (err) {
     console.error("Failed to fetch docs", err);
@@ -291,8 +322,23 @@ app.get("/:collection/docs/:id", apiKeyAuth, async (c) => {
         selectedDoc[field] = doc[field];
       }
     }
+
+    await logDbEvent({
+      dbId,
+      collection,
+      action: "READ",
+      docId: id,
+    });
+
     return c.json(selectedDoc);
   }
+
+  await logDbEvent({
+    dbId,
+    collection,
+    action: "READ",
+    docId: id,
+  });
 
   return c.json(doc);
 });
@@ -338,6 +384,13 @@ app.patch("/:collection/docs/:id", apiKeyAuth, async (c) => {
     args: [JSON.stringify(updated), updated.updatedAt, dbId, collection, id],
   });
 
+  await logDbEvent({
+    dbId,
+    collection,
+    action: "UPDATE",
+    docId: id,
+  });
+
   return c.json(updated);
 });
 
@@ -357,6 +410,13 @@ app.delete("/:collection/docs/:id", apiKeyAuth, async (c) => {
   if (rowsAffected === 0) {
     return c.json({ error: "Document not found" }, 404);
   }
+
+  await logDbEvent({
+    dbId,
+    collection,
+    action: "DELETE",
+    docId: id,
+  });
 
   return c.json({ message: "Document deleted" });
 });
@@ -399,6 +459,14 @@ app.get("/:collection/count", apiKeyAuth, async (c) => {
 
   try {
     const { rows } = await turso.execute({ sql, args });
+
+    await logDbEvent({
+      dbId,
+      collection,
+      action: "READ",
+      docId: undefined,
+    });
+
     return c.json({ count: rows[0].count });
   } catch (err) {
     console.error("Failed to count docs with filters", err);
