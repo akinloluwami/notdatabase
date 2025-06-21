@@ -2,15 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     // Handle login logic here
-    console.log("Login attempt:", { email, password });
+    console.log("Login attempt:", { email, password, rememberMe });
   };
 
   return (
@@ -23,80 +39,90 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200"
-                placeholder="Enter your email"
-              />
-            </div>
+        <Card className="border-gray-100/20">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-white">Sign In</CardTitle>
+            <CardDescription className="text-gray-400">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200"
-                placeholder="Enter your password"
-              />
-            </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="h-4 w-4 text-white bg-gray-800 border-gray-700 rounded focus:ring-white focus:ring-2"
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-300">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white"
+                  placeholder="Enter your email"
                 />
-                <label
-                  htmlFor="remember"
-                  className="ml-2 block text-sm text-gray-300"
-                >
-                  Remember me
-                </label>
               </div>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-white hover:text-gray-300 transition-colors"
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-300">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white"
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) =>
+                      setRememberMe(checked as boolean)
+                    }
+                    className="border-gray-700 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                  />
+                  <Label
+                    htmlFor="remember"
+                    className="text-sm text-gray-300 cursor-pointer"
+                  >
+                    Remember me
+                  </Label>
+                </div>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-white hover:text-gray-300 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Login Button */}
+              <Button
+                type="submit"
+                className="w-full bg-white text-black hover:bg-gray-200"
               >
-                Forgot password?
-              </Link>
-            </div>
+                Sign In
+              </Button>
+            </form>
 
-            {/* Login Button */}
-            <button
-              type="submit"
-              className="w-full bg-white text-black py-3 px-4 rounded-md font-medium hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200"
-            >
-              Sign In
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="mt-6">
+            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-700"></div>
@@ -107,18 +133,24 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Social Login Buttons */}
-          <div className="mt-6 space-y-3">
-            <button className="w-full bg-gray-800 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 border border-gray-700">
-              Continue with Google
-            </button>
-            <button className="w-full bg-gray-800 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 border border-gray-700">
-              Continue with GitHub
-            </button>
-          </div>
-        </div>
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              >
+                Continue with Google
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              >
+                Continue with GitHub
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Sign Up Link */}
         <div className="mt-6 text-center">
