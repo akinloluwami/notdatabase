@@ -46,12 +46,60 @@ export const apiClient = {
 
       return response.json();
     },
-    getAnalytics: async (dbId: string) => {
-      const response = await fetch(`/api/databases/${dbId}/analytics`);
+    getAnalytics: async (dbId: string, timeFrame?: string) => {
+      const url = new URL(
+        `/api/databases/${dbId}/analytics`,
+        window.location.origin
+      );
+      if (timeFrame) {
+        url.searchParams.set("timeFrame", timeFrame);
+      }
+
+      const response = await fetch(url.toString());
 
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch analytics");
+      }
+
+      return response.json();
+    },
+  },
+  apiKeys: {
+    list: async (dbId: string) => {
+      const response = await fetch(`/api/databases/${dbId}/api-keys`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch API keys");
+      }
+
+      return response.json();
+    },
+    create: async (dbId: string, name: string) => {
+      const response = await fetch(`/api/databases/${dbId}/api-keys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create API key");
+      }
+
+      return response.json();
+    },
+    revoke: async (dbId: string, keyId: string) => {
+      const response = await fetch(`/api/databases/${dbId}/api-keys/${keyId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to revoke API key");
       }
 
       return response.json();
