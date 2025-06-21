@@ -32,6 +32,7 @@ export default function ApiKeysPage() {
   const [newKeyName, setNewKeyName] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   // Fetch database metadata
@@ -107,31 +108,38 @@ export default function ApiKeysPage() {
         "Are you sure you want to revoke this API key? This action cannot be undone."
       )
     ) {
-      revokeKeyMutation.mutate(keyId);
+      setLoadingKeys((prev) => new Set(prev).add(keyId));
+      revokeKeyMutation.mutate(keyId, {
+        onSettled: () => {
+          setLoadingKeys((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(keyId);
+            return newSet;
+          });
+        },
+      });
     }
   };
 
-  if (isLoadingDb || isLoadingKeys) {
+  if (isLoadingDb) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-400">Loading API keys...</p>
+          <p className="text-gray-400">Loading database...</p>
         </div>
       </div>
     );
   }
 
-  if (isErrorDb || isErrorKeys) {
+  if (isErrorDb) {
     return (
       <div className="p-8">
         <div className="flex items-center gap-2 text-red-400 mb-4">
           <AlertTriangle className="h-5 w-5" />
-          <span>Error loading API keys</span>
+          <span>Error loading database</span>
         </div>
-        <p className="text-gray-400">
-          {((dbError || keysError) as Error).message}
-        </p>
+        <p className="text-gray-400">{(dbError as Error).message}</p>
       </div>
     );
   }
@@ -141,7 +149,9 @@ export default function ApiKeysPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-2">API Keys</h1>
-          <p className="text-gray-400">Manage API keys for {dbMeta?.name}</p>
+          <p className="text-muted-foreground">
+            Manage API keys for {dbMeta?.name}
+          </p>
         </div>
         <Button
           onClick={() => {
@@ -155,7 +165,19 @@ export default function ApiKeysPage() {
       </div>
 
       <div className="space-y-4">
-        {apiKeys && apiKeys.length > 0 ? (
+        {isLoadingKeys ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">Loading API keys...</p>
+            </div>
+          </div>
+        ) : isErrorKeys ? (
+          <div className="flex items-center gap-2 text-destructive mb-4">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Error loading API keys</span>
+          </div>
+        ) : apiKeys && apiKeys.length > 0 ? (
           apiKeys.map((key: any) => (
             <Card key={key.id}>
               <CardHeader>
@@ -202,9 +224,9 @@ export default function ApiKeysPage() {
                         size="sm"
                         onClick={() => handleRevokeKey(key.id)}
                         className="text-destructive hover:bg-destructive/10"
-                        disabled={revokeKeyMutation.isPending}
+                        disabled={loadingKeys.has(key.id)}
                       >
-                        {revokeKeyMutation.isPending ? (
+                        {loadingKeys.has(key.id) ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <Trash2 className="h-4 w-4" />
