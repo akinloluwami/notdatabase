@@ -17,7 +17,18 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { Database, Key, Settings, FolderOpen } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Database,
+  Key,
+  Settings,
+  FolderOpen,
+  Activity,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+} from "lucide-react";
 
 export default function DatabasePage() {
   const { dbId } = useParams();
@@ -43,12 +54,23 @@ export default function DatabasePage() {
     enabled: !!dbId,
   });
 
-  if (isLoading || isLoadingCollections)
+  const {
+    data: analytics,
+    isLoading: isLoadingAnalytics,
+    isError: isErrorAnalytics,
+    error: analyticsError,
+  } = useQuery({
+    queryKey: ["database-analytics", dbId],
+    queryFn: () => apiClient.database.getAnalytics(dbId as string),
+    enabled: !!dbId,
+  });
+
+  if (isLoading || isLoadingCollections || isLoadingAnalytics)
     return <div className="p-8">Loading database...</div>;
-  if (isError || isErrorCollections)
+  if (isError || isErrorCollections || isErrorAnalytics)
     return (
       <div className="p-8 text-red-400">
-        {((error || collectionsError) as Error).message}
+        {((error || collectionsError || analyticsError) as Error).message}
       </div>
     );
 
@@ -106,25 +128,89 @@ export default function DatabasePage() {
       </Sidebar>
       <SidebarInset>
         <div className="min-h-screen bg-black text-white p-8">
-          <h1 className="text-3xl font-bold mb-4">{dbMeta.name}</h1>
-          <p className="text-gray-400 mb-2">ID: {dbMeta.id}</p>
-          {/* Render more meta info as needed */}
-          <pre className="bg-gray-900 p-4 rounded">
-            {JSON.stringify(dbMeta, null, 2)}
-          </pre>
-          <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-2">Collections</h2>
-            {collections && collections.length > 0 ? (
-              <ul className="list-disc list-inside">
-                {collections.map((col: string) => (
-                  <li key={col} className="text-lg">
-                    {col}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-400">No collections found.</p>
-            )}
+          <h1 className="text-2xl font-semibold mb-6">{dbMeta.name}</h1>
+
+          {/* Analytics Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-medium mb-4 flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Analytics
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* Total Events */}
+              <Card className="border-gray-100/20 bg-transparent">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">
+                    Total Events
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.total || 0}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Create Events */}
+              <Card className="border-gray-100/20 bg-transparent">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Plus className="h-4 w-4 text-green-400" />
+                    CREATE
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.byAction?.CREATE || 0}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Read Events */}
+              <Card className="border-gray-100/20 bg-transparent">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-blue-400" />
+                    READ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.byAction?.READ || 0}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Update Events */}
+              <Card className="border-gray-100/20 bg-transparent">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Edit className="h-4 w-4 text-yellow-400" />
+                    UPDATE
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.byAction?.UPDATE || 0}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Delete Events */}
+              <Card className="border-gray-100/20 bg-transparent">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                    DELETE
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.byAction?.DELETE || 0}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </SidebarInset>
