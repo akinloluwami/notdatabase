@@ -4,6 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "../lib/auth-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,6 +28,7 @@ export default function SignupPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -54,6 +68,10 @@ export default function SignupPage() {
       newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (!agreeToTerms) {
+      newErrors.terms = "You must agree to the terms and conditions";
     }
 
     setErrors(newErrors);
@@ -101,154 +119,161 @@ export default function SignupPage() {
         </div>
 
         {/* Signup Form */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-8 shadow-2xl">
-          {errors.general && (
-            <div className="mb-4 p-3 bg-red-900 border border-red-700 rounded-md text-red-200 text-sm">
-              {errors.general}
-            </div>
-          )}
+        <Card className="bg-gray900 border-gray-100/20">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-white">
+              Create Account
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Fill in your details to create your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {errors.general && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errors.general}</AlertDescription>
+              </Alert>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Field */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-300 mb-2"
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Name Field */}
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-gray-300">
+                  Full Name
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white ${
+                    errors.name ? "border-red-500" : ""
+                  }`}
+                  placeholder="Enter your full name"
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-400">{errors.name}</p>
+                )}
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-300">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white ${
+                    errors.email ? "border-red-500" : ""
+                  }`}
+                  placeholder="Enter your email"
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-400">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-300">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white ${
+                    errors.password ? "border-red-500" : ""
+                  }`}
+                  placeholder="Create a password"
+                />
+                {errors.password && (
+                  <p className="text-sm text-red-400">{errors.password}</p>
+                )}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-gray-300">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white ${
+                    errors.confirmPassword ? "border-red-500" : ""
+                  }`}
+                  placeholder="Confirm your password"
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-400">
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+
+              {/* Terms and Conditions */}
+              <div className="space-y-2">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={agreeToTerms}
+                    onCheckedChange={(checked) =>
+                      setAgreeToTerms(checked as boolean)
+                    }
+                    className="border-gray-700 data-[state=checked]:bg-white data-[state=checked]:text-black mt-1"
+                  />
+                  <Label
+                    htmlFor="terms"
+                    className="text-sm text-gray-300 cursor-pointer leading-relaxed"
+                  >
+                    I agree to the{" "}
+                    <Link
+                      href="/terms"
+                      className="text-white hover:text-gray-300"
+                    >
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/privacy"
+                      className="text-white hover:text-gray-300"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </Label>
+                </div>
+                {errors.terms && (
+                  <p className="text-sm text-red-400">{errors.terms}</p>
+                )}
+              </div>
+
+              {/* Signup Button */}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-white text-black hover:bg-gray-200"
               >
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 bg-gray-800 border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200 ${
-                  errors.name ? "border-red-500" : "border-gray-700"
-                }`}
-                placeholder="Enter your full name"
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-400">{errors.name}</p>
-              )}
-            </div>
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </Button>
+            </form>
 
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 bg-gray-800 border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200 ${
-                  errors.email ? "border-red-500" : "border-gray-700"
-                }`}
-                placeholder="Enter your email"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-400">{errors.email}</p>
-              )}
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 bg-gray-800 border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200 ${
-                  errors.password ? "border-red-500" : "border-gray-700"
-                }`}
-                placeholder="Create a password"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-400">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 bg-gray-800 border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200 ${
-                  errors.confirmPassword ? "border-red-500" : "border-gray-700"
-                }`}
-                placeholder="Confirm your password"
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-400">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
-
-            {/* Terms and Conditions */}
-            <div className="flex items-start">
-              <input
-                id="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-white bg-gray-800 border-gray-700 rounded focus:ring-white focus:ring-2 mt-1"
-              />
-              <label
-                htmlFor="terms"
-                className="ml-2 block text-sm text-gray-300"
-              >
-                I agree to the{" "}
-                <Link href="/terms" className="text-white hover:text-gray-300">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/privacy"
-                  className="text-white hover:text-gray-300"
-                >
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
-
-            {/* Signup Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-white text-black py-3 px-4 rounded-md font-medium hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="mt-6">
+            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-700"></div>
@@ -259,18 +284,24 @@ export default function SignupPage() {
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Social Signup Buttons */}
-          <div className="mt-6 space-y-3">
-            <button className="w-full bg-gray-800 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 border border-gray-700">
-              Continue with Google
-            </button>
-            <button className="w-full bg-gray-800 text-white py-3 px-4 rounded-md font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 border border-gray-700">
-              Continue with GitHub
-            </button>
-          </div>
-        </div>
+            {/* Social Signup Buttons */}
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              >
+                Continue with Google
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              >
+                Continue with GitHub
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Login Link */}
         <div className="mt-6 text-center">
