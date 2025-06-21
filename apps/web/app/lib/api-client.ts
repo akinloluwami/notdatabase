@@ -46,6 +46,16 @@ export const apiClient = {
 
       return response.json();
     },
+    getAnalytics: async (dbId: string) => {
+      const response = await fetch(`/api/databases/${dbId}/analytics`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch analytics");
+      }
+
+      return response.json();
+    },
   },
   collection: {
     getDocuments: async (
