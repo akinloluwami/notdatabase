@@ -30,7 +30,7 @@ export default function ApiKeysPage() {
   const { dbId } = useParams();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
@@ -100,6 +100,18 @@ export default function ApiKeysPage() {
     } catch (err) {
       console.error("Failed to copy key:", err);
     }
+  };
+
+  const handleToggleKeyVisibility = (keyId: string) => {
+    setVisibleKeys((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(keyId)) {
+        newSet.delete(keyId);
+      } else {
+        newSet.add(keyId);
+      }
+      return newSet;
+    });
   };
 
   const handleRevokeKey = (keyId: string) => {
@@ -208,9 +220,9 @@ export default function ApiKeysPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowApiKey(!showApiKey)}
+                          onClick={() => handleToggleKeyVisibility(key.id)}
                         >
-                          {showApiKey ? (
+                          {visibleKeys.has(key.id) ? (
                             <EyeOff className="h-4 w-4" />
                           ) : (
                             <Eye className="h-4 w-4" />
@@ -238,7 +250,7 @@ export default function ApiKeysPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {showApiKey && !key.revoked ? (
+                  {visibleKeys.has(key.id) && !key.revoked ? (
                     <div className="bg-muted p-3 rounded border">
                       <code className="text-sm break-all">{key.key}</code>
                     </div>
