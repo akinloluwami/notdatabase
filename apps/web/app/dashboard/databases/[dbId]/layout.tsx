@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/app/lib/api-client";
 import Link from "next/link";
@@ -17,6 +17,13 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Database, Key, Settings, FolderOpen, Loader2 } from "lucide-react";
 
 export default function DatabaseLayout({
@@ -26,6 +33,7 @@ export default function DatabaseLayout({
 }) {
   const { dbId } = useParams();
   const pathname = usePathname();
+  const router = useRouter();
 
   const {
     data: dbMeta,
@@ -49,6 +57,11 @@ export default function DatabaseLayout({
     enabled: !!dbId,
   });
 
+  const { data: databases, isLoading: isLoadingDatabases } = useQuery({
+    queryKey: ["databases"],
+    queryFn: apiClient.database.list,
+  });
+
   if (isLoading || isLoadingCollections)
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -65,10 +78,46 @@ export default function DatabaseLayout({
       </div>
     );
 
+  const handleDatabaseChange = (selectedDbId: string) => {
+    // Navigate to the overview page of the selected database
+    router.push(`/dashboard/databases/${selectedDbId}`);
+  };
+
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader>{dbMeta.name}</SidebarHeader>
+        <SidebarHeader className="flex flex-row">
+          <Link href="/dashboard">
+            <img
+              src="https://api.iconify.design/solar:box-minimalistic-bold-duotone.svg?color=%23888888"
+              className="w-8"
+            />
+          </Link>
+          <Select value={dbId as string} onValueChange={handleDatabaseChange}>
+            <SelectTrigger className="w-full border-none bg-transparent text-left font-semibold hover:bg-accent/50">
+              <SelectValue placeholder="Select database" />
+            </SelectTrigger>
+            <SelectContent>
+              {isLoadingDatabases ? (
+                <SelectItem value="loading" disabled>
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading databases...
+                  </div>
+                </SelectItem>
+              ) : (
+                databases?.map((db: { id: string; name: string }) => (
+                  <SelectItem key={db.id} value={db.id}>
+                    <div className="flex items-center gap-2">
+                      <Database className="h-4 w-4" />
+                      {db.name}
+                    </div>
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </SidebarHeader>
         <SidebarContent className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
