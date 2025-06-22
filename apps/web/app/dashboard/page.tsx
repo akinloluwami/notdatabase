@@ -65,7 +65,13 @@ export default function DashboardPage() {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader>NotDatabase</SidebarHeader>
+        <SidebarHeader className="flex flex-row items-center">
+          <img
+            src="https://api.iconify.design/solar:box-minimalistic-bold-duotone.svg?color=%23888888"
+            className="w-8"
+          />
+          <p className="text-lg font-semibold">NotDatabase</p>
+        </SidebarHeader>
         <SidebarContent className="p-2">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -78,7 +84,7 @@ export default function DashboardPage() {
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/settings">
+                <Link href="/dashboard/settings">
                   <Settings className="h-4 w-4" />
                   Settings
                 </Link>
