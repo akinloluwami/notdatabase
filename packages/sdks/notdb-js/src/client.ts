@@ -12,7 +12,7 @@ import {
   applyDefaultValues,
 } from "./utils.js";
 
-const DEFAULT_BASE_URL = "http://localhost:3344";
+const DEFAULT_BASE_URL = "https://api.notdatabase.com";
 
 export function createClient<S extends SchemaDefinition>(
   opts: Omit<CreateClientOptions, "baseUrl"> & { schema: S }
