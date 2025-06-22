@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev-run": "tsc && node dist/client.js && rm -rf dist"
+    "dev-run": "clear && pnpm run build && node dist/index.js"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
