@@ -24,13 +24,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Settings, Database, Loader2 } from "lucide-react";
+import { Home, Settings, Database, Loader2, Copy, Check } from "lucide-react";
 import Ttile from "@/components/ttile";
 
 export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [dbName, setDbName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [createdDatabase, setCreatedDatabase] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch databases
@@ -47,10 +50,12 @@ export default function DashboardPage() {
   // Create database mutation
   const createDatabaseMutation = useMutation({
     mutationFn: (name: string) => apiClient.database.create(name),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["databases"] });
       setIsModalOpen(false);
       setDbName("");
+      setCreatedDatabase(data);
+      setIsApiKeyModalOpen(true);
     },
     onError: (err: any) => {
       setError(err.message);
@@ -61,6 +66,14 @@ export default function DashboardPage() {
     e.preventDefault();
     setError(null);
     createDatabaseMutation.mutate(dbName);
+  };
+
+  const handleCopyApiKey = async () => {
+    if (createdDatabase?.apiKey) {
+      await navigator.clipboard.writeText(createdDatabase.apiKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -155,6 +168,8 @@ export default function DashboardPage() {
               )}
             </main>
           </div>
+
+          {/* Create Database Modal */}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogContent>
               <DialogHeader>
@@ -200,6 +215,70 @@ export default function DashboardPage() {
                   </Button>
                 </DialogFooter>
               </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* API Key Modal */}
+          <Dialog open={isApiKeyModalOpen} onOpenChange={setIsApiKeyModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Database Created Successfully!</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="p-4 bg-green-900/20 border border-green-700 rounded-md">
+                  <p className="text-green-200 text-sm mb-2">
+                    Your database "{createdDatabase?.name}" has been created
+                    successfully.
+                  </p>
+                  <p className="text-green-200 text-sm">Here's your API key.</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    API Key
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      value={createdDatabase?.apiKey || ""}
+                      readOnly
+                      className="font-mono text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyApiKey}
+                      className="flex-shrink-0"
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {copied && (
+                    <p className="text-green-400 text-xs mt-1">
+                      Copied to clipboard!
+                    </p>
+                  )}
+                </div>
+
+                <div className="bg-yellow-900/20 border border-yellow-700 rounded-md p-3">
+                  <p className="text-yellow-200 text-xs">
+                    ⚠️ Keep this API key secure. You can manage your API keys in
+                    the database settings.
+                  </p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={() => setIsApiKeyModalOpen(false)}
+                  className="w-full"
+                >
+                  Got it!
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </SidebarInset>
