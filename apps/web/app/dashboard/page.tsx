@@ -154,11 +154,9 @@ export default function DashboardPage() {
                       <CardContent>
                         <div className="flex items-center text-sm text-gray-400">
                           <Database className="h-4 w-4 mr-2" />
-                          Database sleeping
+                          {db.collectionCount || 0} collections,{" "}
+                          {db.documentCount || 0} documents
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Schema last updated 1 year ago
-                        </p>
                       </CardContent>
                     </Card>
                   ))}
