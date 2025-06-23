@@ -17,6 +17,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import Ttile from "@/components/ttile";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -98,7 +99,6 @@ export default function SignupPage() {
       if (result.error) {
         setErrors({ general: result.error.message || "Signup failed" });
       } else {
-        // Redirect to login page or dashboard
         router.push("/dashboard");
       }
     } catch (error) {
@@ -111,8 +111,8 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <Ttile>Signup</Ttile>
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
           <p className="text-gray-400">Join us and get started</p>
