@@ -34,6 +34,8 @@ import {
   isSameDay,
   isSameHour,
 } from "date-fns";
+// @ts-expect-error: No types for chartjs-plugin-crosshair
+import CrosshairPlugin from "chartjs-plugin-crosshair";
 
 ChartJS.register(
   CategoryScale,
@@ -42,7 +44,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  CrosshairPlugin
 );
 
 export default function DatabasePage() {
@@ -235,6 +238,19 @@ export default function DatabasePage() {
       },
       title: {
         display: false,
+      },
+      crosshair: {
+        line: {
+          color: "#9ca3af",
+          width: 1,
+          dashPattern: [6, 6],
+        },
+        sync: {
+          enabled: false,
+        },
+        zoom: {
+          enabled: false,
+        },
       },
     },
     scales: {
