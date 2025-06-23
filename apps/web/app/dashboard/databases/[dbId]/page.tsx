@@ -256,7 +256,8 @@ export default function DatabasePage() {
     scales: {
       x: {
         grid: {
-          color: "#374151",
+          display: false,
+          drawBorder: true,
         },
         ticks: {
           color: "#9ca3af",
@@ -264,10 +265,14 @@ export default function DatabasePage() {
       },
       y: {
         grid: {
-          color: "#374151",
+          display: true,
+          borderDash: [6, 6],
+          color: "#9ca3af",
+          drawBorder: true,
         },
         ticks: {
           color: "#9ca3af",
+          maxTicksLimit: 6,
         },
       },
     },
