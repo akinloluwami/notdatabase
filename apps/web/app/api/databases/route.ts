@@ -74,12 +74,24 @@ export async function GET(req: NextRequest) {
     }
 
     const rowsResult = await turso.execute({
-      sql: `SELECT id, name FROM databases WHERE owner_id = ?`,
+      sql: `
+        SELECT 
+          d.id, 
+          d.name,
+          COUNT(DISTINCT kv.collection) as collection_count,
+          COUNT(kv.key) as document_count
+        FROM databases d
+        LEFT JOIN kv_store kv ON d.id = kv.db_id
+        WHERE d.owner_id = ?
+        GROUP BY d.id, d.name
+      `,
       args: [session.user.id],
     });
     const rows = rowsResult.rows.map((r) => ({
       id: r["id"] as string,
       name: r["name"] as string,
+      collectionCount: r["collection_count"] as number,
+      documentCount: r["document_count"] as number,
     }));
 
     return NextResponse.json(rows, { status: 200 });
