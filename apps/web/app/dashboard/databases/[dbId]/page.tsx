@@ -13,20 +13,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
 import { Activity, Plus, Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import Ttile from "@/components/ttile";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function DatabasePage() {
   const { dbId } = useParams();
@@ -106,6 +114,82 @@ export default function DatabasePage() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const chartData = {
+    labels:
+      analytics?.timeseries?.map((d: any) => formatTimeLabel(d.time)) || [],
+    datasets: [
+      {
+        label: "CREATE",
+        data: analytics?.timeseries?.map((d: any) => d.CREATE) || [],
+        borderColor: "#10b981",
+        backgroundColor: "rgba(16, 185, 129, 0.1)",
+        fill: false,
+        tension: 0.4,
+      },
+      {
+        label: "READ",
+        data: analytics?.timeseries?.map((d: any) => d.READ) || [],
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        fill: false,
+        tension: 0.4,
+      },
+      {
+        label: "UPDATE",
+        data: analytics?.timeseries?.map((d: any) => d.UPDATE) || [],
+        borderColor: "#f59e0b",
+        backgroundColor: "rgba(245, 158, 11, 0.1)",
+        fill: false,
+        tension: 0.4,
+      },
+      {
+        label: "DELETE",
+        data: analytics?.timeseries?.map((d: any) => d.DELETE) || [],
+        borderColor: "#ef4444",
+        backgroundColor: "rgba(239, 68, 68, 0.1)",
+        fill: false,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom" as const,
+        labels: {
+          color: "#9ca3af",
+          usePointStyle: true,
+          padding: 20,
+        },
+      },
+      title: {
+        display: false,
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          color: "#374151",
+        },
+        ticks: {
+          color: "#9ca3af",
+        },
+      },
+      y: {
+        grid: {
+          color: "#374151",
+        },
+        ticks: {
+          color: "#9ca3af",
+        },
+      },
+    },
   };
 
   return (
@@ -208,91 +292,25 @@ export default function DatabasePage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Timeseries Chart */}
-          {analytics?.timeseries && analytics.timeseries.length > 0 && (
-            <Card className="border-gray-100/20 bg-transparent">
+            {/* Timeseries Chart */}
+            <Card className="border-gray-100/20 bg-transparent col-span-full">
               <CardHeader>
                 <CardTitle className="text-lg font-medium">
                   Event Activity Over Time
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ChartContainer config={chartConfig} className="h-80">
-                  <LineChart data={analytics.timeseries}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis
-                      dataKey="time"
-                      tickFormatter={formatTimeLabel}
-                      stroke="#9ca3af"
-                      fontSize={12}
-                    />
-                    <YAxis stroke="#9ca3af" fontSize={12} />
-                    <ChartTooltip
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 text-white">
-                              <div className="font-medium mb-2">
-                                {formatTimeLabel(label)}
-                              </div>
-                              {payload.map((entry: any, index: number) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center gap-2 text-sm"
-                                >
-                                  <div
-                                    className="w-3 h-3 rounded-full"
-                                    style={{ backgroundColor: entry.color }}
-                                  />
-                                  <span className="text-gray-300">
-                                    {entry.name}:
-                                  </span>
-                                  <span className="font-medium">
-                                    {entry.value}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="CREATE"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="READ"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="UPDATE"
-                      stroke="#f59e0b"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="DELETE"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ChartContainer>
+              <CardContent className="h-80">
+                {analytics?.timeseries && analytics.timeseries.length > 0 ? (
+                  <Line options={chartOptions} data={chartData} />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    No database events
+                  </div>
+                )}
               </CardContent>
             </Card>
-          )}
+          </div>
         </div>
       </div>
     </>
