@@ -64,6 +64,18 @@ export const apiClient = {
 
       return response.json();
     },
+    delete: async (dbId: string) => {
+      const response = await fetch(`/api/databases/${dbId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete database");
+      }
+
+      return response.json();
+    },
   },
   apiKeys: {
     list: async (dbId: string) => {
