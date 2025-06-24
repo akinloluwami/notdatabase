@@ -1,1 +1,0 @@
-web: pnpm --filter ./apps/api... run start
