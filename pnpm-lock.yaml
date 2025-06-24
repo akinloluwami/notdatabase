@@ -40,7 +40,7 @@ importers:
         version: 0.1.0
     devDependencies:
       '@types/node':
-        specifier: ^20.11.17
+        specifier: ^20.19.1
         version: 20.19.1
       tsx:
         specifier: ^4.7.1
