@@ -41,8 +41,11 @@ export default function Home() {
         </div>
       </div>
       <div className="p-5">
-        <div className="max-w-7xl mx-auto px-4 py-8 border border-gray-200/5 rounded-2xl flex justify-center items-center relative">
-          <div className="" style={{ aspectRatio: "1 / 1", height: 500 }}>
+        <div className="max-w-7xl mx-auto py-8 border border-gray-200/5 rounded-2xl flex justify-center items-center relative">
+          <div
+            className="overflow-hidden"
+            style={{ aspectRatio: "1 / 1", height: 500 }}
+          >
             <Cube3D />
           </div>
           <div className="absolute w-full h-full bg-black/80 rounded-2xl flex items-center justify-center flex-col">
@@ -52,7 +55,7 @@ export default function Home() {
             <p className="text-gray-400 text-center lg:text-xl mt-2">
               The easiest schema-based type-safe document database.
             </p>
-            <div className="flex gap-x-3 mt-6">
+            <div className="flex gap-x-3 mt-6 flex-col lg:flex-row w-full px-4 items-center justify-center gap-2">
               <div className="flex items-center bg-black/60 rounded-xl px-5 py-2 text-white font-mono text-base shadow-lg border border-white/10 backdrop-blur-md">
                 <span className="opacity-70 select-all">
                   $ npm install notdb
