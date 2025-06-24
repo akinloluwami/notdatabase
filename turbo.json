@@ -14,7 +14,9 @@
         "TURSO_DATABASE_URL",
         "TURSO_AUTH_TOKEN",
         "POLAR_PRODUCT_ID",
-        "POLAR_WEBHOOK_SECRET"
+        "POLAR_WEBHOOK_SECRET",
+        "TURSO_AUTH_TOKEN",
+        "TURSO_DATABASE_URL"
       ]
     },
     "lint": {
