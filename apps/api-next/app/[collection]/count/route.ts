@@ -6,7 +6,7 @@ import { getDbIdFromApiKey } from "../../lib/auth";
 // GET /api/[collection]/count - Count documents in collection
 export async function GET(
   request: NextRequest,
-  { params }: { params: { collection: string } }
+  { params }: { params: Promise<{ collection: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -18,7 +18,7 @@ export async function GET(
     );
   }
 
-  const collection = params.collection;
+  const { collection } = await params;
   const url = new URL(request.url);
   const query = url.searchParams;
 

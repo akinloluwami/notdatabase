@@ -7,7 +7,7 @@ import { getDbIdFromApiKey } from "../../lib/auth";
 // POST /api/[collection]/bulk - Insert multiple documents
 export async function POST(
   request: NextRequest,
-  { params }: { params: { collection: string } }
+  { params }: { params: Promise<{ collection: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -19,7 +19,7 @@ export async function POST(
     );
   }
 
-  const collection = params.collection;
+  const { collection } = await params;
   const body = await request.json();
 
   if (!Array.isArray(body)) {

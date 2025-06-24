@@ -6,7 +6,7 @@ import { getDbIdFromApiKey } from "../../../lib/auth";
 // GET /api/[collection]/docs/[id] - Get a specific document
 export async function GET(
   request: NextRequest,
-  { params }: { params: { collection: string; id: string } }
+  { params }: { params: Promise<{ collection: string; id: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -18,8 +18,7 @@ export async function GET(
     );
   }
 
-  const collection = params.collection;
-  const id = params.id;
+  const { collection, id } = await params;
 
   const url = new URL(request.url);
   const selectParam = url.searchParams.get("select");
@@ -79,7 +78,7 @@ export async function GET(
 // PATCH /api/[collection]/docs/[id] - Update a specific document
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { collection: string; id: string } }
+  { params }: { params: Promise<{ collection: string; id: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -91,8 +90,7 @@ export async function PATCH(
     );
   }
 
-  const collection = params.collection;
-  const id = params.id;
+  const { collection, id } = await params;
   const body = await request.json();
 
   const { rows } = await turso.execute({
@@ -146,7 +144,7 @@ export async function PATCH(
 // DELETE /api/[collection]/docs/[id] - Delete a specific document
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { collection: string; id: string } }
+  { params }: { params: Promise<{ collection: string; id: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -158,8 +156,7 @@ export async function DELETE(
     );
   }
 
-  const collection = params.collection;
-  const id = params.id;
+  const { collection, id } = await params;
 
   const { rowsAffected } = await turso.execute({
     sql: `

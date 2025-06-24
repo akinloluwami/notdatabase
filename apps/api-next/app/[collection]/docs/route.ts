@@ -8,7 +8,7 @@ import { getDbIdFromApiKey } from "../../lib/auth";
 // GET /api/[collection]/docs - Get documents from collection
 export async function GET(
   request: NextRequest,
-  { params }: { params: { collection: string } }
+  { params }: { params: Promise<{ collection: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -20,7 +20,7 @@ export async function GET(
     );
   }
 
-  const collection = params.collection;
+  const { collection } = await params;
   const url = new URL(request.url);
   const query = url.searchParams;
 
@@ -92,7 +92,7 @@ export async function GET(
 // POST /api/[collection] - Create a new document
 export async function POST(
   request: NextRequest,
-  { params }: { params: { collection: string } }
+  { params }: { params: Promise<{ collection: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -104,7 +104,7 @@ export async function POST(
     );
   }
 
-  const collection = params.collection;
+  const { collection } = await params;
   const body = await request.json();
 
   if (!body || typeof body !== "object" || Array.isArray(body)) {

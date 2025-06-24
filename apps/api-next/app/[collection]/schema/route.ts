@@ -6,7 +6,7 @@ import { getDbIdFromApiKey } from "../../lib/auth";
 // POST /api/[collection]/schema - Save collection schema
 export async function POST(
   request: NextRequest,
-  { params }: { params: { collection: string } }
+  { params }: { params: Promise<{ collection: string }> }
 ) {
   const authHeader = request.headers.get("authorization");
   const dbId = await getDbIdFromApiKey(authHeader);
@@ -18,7 +18,7 @@ export async function POST(
     );
   }
 
-  const collection = params.collection;
+  const { collection } = await params;
   const schema = await request.json();
 
   if (!schema || typeof schema !== "object" || Array.isArray(schema)) {
