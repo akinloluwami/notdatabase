@@ -11,7 +11,8 @@
     "@libsql/client": "^0.15.9",
     "dotenv": "^16.5.0",
     "hono": "^4.7.11",
-    "nanoid": "^5.1.5"
+    "nanoid": "^5.1.5",
+    "notdb": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
