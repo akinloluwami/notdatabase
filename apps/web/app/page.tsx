@@ -8,6 +8,8 @@ import Cube3D from "@/components/cube-3d";
 import { useState, useEffect } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { authClient } from "./lib/auth-client";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState(0);
@@ -75,6 +77,14 @@ const db = createClient({
 }
 });`;
 
+  const [session, setSession] = useState<{} | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await authClient.getSession();
+      setSession(data);
+    })();
+  }, []);
+
   return (
     <>
       <Ttile>NotDatabase</Ttile>
@@ -90,12 +100,22 @@ const db = createClient({
           </Link>
           <span className="mx-2">|</span>
           <>
-            <Link href="/login" className="hover:text-white">
-              Login
-            </Link>
-            <Link href="/signup" className="hover:text-white">
-              Signup
-            </Link>
+            {session ? (
+              <Link href="/dashboard">
+                <Button size="sm" className="">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="hover:text-white">
+                  Login
+                </Link>
+                <Link href="/signup" className="hover:text-white">
+                  Signup
+                </Link>
+              </>
+            )}
           </>
           <span className="mx-2">|</span>
           <Link
