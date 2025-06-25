@@ -21,7 +21,9 @@ const HowItWorks = () => {
 
       <DocsHeading level={2}>1. You define your schema</DocsHeading>
       <DocsText className="mb-2">In your SDK config:</DocsText>
-      <DocsCodeBlock>{`const db = createClient({
+      <DocsCodeBlock>{`import { createClient } from "notdb";
+
+const db = createClient({
   apiKey: "your_api_key",
   schema: {
     users: {
