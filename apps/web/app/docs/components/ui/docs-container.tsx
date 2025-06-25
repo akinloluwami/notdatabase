@@ -24,8 +24,14 @@ function getCurrentPageTitle(currentPath: string) {
   return page ? page.name : "Docs";
 }
 
-const DocsContainer = ({ children }: { children: React.ReactNode }) => {
-  const pathname = usePathname();
+const DocsContainer = ({
+  children,
+  currentPath,
+}: {
+  children: React.ReactNode;
+  currentPath?: string;
+}) => {
+  const pathname = currentPath ?? usePathname();
   const { prev, next } = getPrevNext(pathname);
   const pageTitle = getCurrentPageTitle(pathname);
 
