@@ -55,4 +55,4 @@ await db.users.delete("user_id");
 
 ---
 
-For more details, check out the [documentation](https://docs.notdatabase.com).
+For more details, check out the [documentation](https://notdatabase.com/docs).
