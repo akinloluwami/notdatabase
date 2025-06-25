@@ -42,6 +42,9 @@ export type InferSchemaProps<T extends JSONSchema["properties"]> = {
   [K in keyof T]: InferFieldType<T[K]>;
 } & SystemFields;
 
+export type InsertSchemaProps<T extends JSONSchema["properties"]> =
+  InferSchemaProps<T> & { key?: string };
+
 export type InferSelected<T, S extends SelectFields<T> | undefined> =
   S extends SelectFields<T>
     ? {
