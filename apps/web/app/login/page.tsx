@@ -5,8 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "../lib/auth-client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -17,53 +15,19 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import Ttile from "@/components/ttile";
+import { set } from "date-fns";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrors({});
-
-    try {
-      const result = await authClient.signIn.email({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (result.error) {
-        setErrors({ general: result.error.message || "Login failed" });
-      } else {
-        router.push("/dashboard");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setErrors({ general: "An unexpected error occurred. Please try again." });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSocialLogin = async (provider: "google" | "github") => {
+    setIsLoading(provider);
+    await authClient.signIn.social({
+      provider,
+      callbackURL: `${window.location.origin}/dashboard`,
+    });
   };
 
   return (
@@ -81,7 +45,7 @@ export default function LoginPage() {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl text-white">Sign In</CardTitle>
               <CardDescription className="text-gray-400">
-                Enter your credentials to access your account
+                Choose your preferred sign-in method
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -92,86 +56,27 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-300">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white ${
-                      errors.email ? "border-red-500" : ""
-                    }`}
-                    placeholder="Enter your email"
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-400">{errors.email}</p>
-                  )}
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-gray-300">
-                    Password
-                  </Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    className={`bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-white ${
-                      errors.password ? "border-red-500" : ""
-                    }`}
-                    placeholder="Enter your password"
-                  />
-                  {errors.password && (
-                    <p className="text-sm text-red-400">{errors.password}</p>
-                  )}
-                </div>
-
-                {/* Login Button */}
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-white text-black hover:bg-gray-200"
-                >
-                  {isLoading ? "Signing In..." : "Sign In"}
-                </Button>
-              </form>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-700"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-900 text-gray-400">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
               {/* Social Login Buttons */}
               <div className="space-y-3">
                 <Button
                   variant="outline"
+                  onClick={() => handleSocialLogin("google")}
+                  disabled={isLoading !== null}
                   className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
                 >
-                  Continue with Google
+                  {isLoading === "google"
+                    ? "Signing in..."
+                    : "Continue with Google"}
                 </Button>
                 <Button
                   variant="outline"
+                  onClick={() => handleSocialLogin("github")}
+                  disabled={isLoading !== null}
                   className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
                 >
-                  Continue with GitHub
+                  {isLoading === "github"
+                    ? "Signing in..."
+                    : "Continue with GitHub"}
                 </Button>
               </div>
             </CardContent>
