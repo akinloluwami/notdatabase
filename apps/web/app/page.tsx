@@ -22,19 +22,19 @@ export default function Home() {
       title: "Create",
       code: `//Insert single
 db.users.insert({
-      email: "johndoe@example.com",
-      name: "John Doe",
+    email: "johndoe@example.com",
+    name: "John Doe",
   })
 
 //Insert multiple
 db.users.insertBulk([
   {
-email:"user@example.com",
-name: "User One",
+    email:"user@example.com",
+    name: "User One",
   },
   {
-  email:"user2@example.com",
-  name: "User Two",
+    email:"user2@example.com",
+    name: "User Two",
   },
 ])
   `,
@@ -59,6 +59,21 @@ name: "User One",
       `,
     },
   ];
+
+  const notdbsetup = `import { createClient } from "notdb";
+
+const db = createClient({
+  apiKey: "YOUR_API_KEY",
+  schema: {
+  users: {
+    properties: {
+      name: { type: "string", required: true },
+      email: { type: "string", required: true, unique: true },
+      age: { type: "number" },
+    },
+  },
+}
+});`;
 
   return (
     <>
@@ -228,7 +243,7 @@ name: "User One",
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
-          <div className="bg-black/10 p-6 rounded-xl border border-gray-200/5">
+          <div className="bg-black/10 p-6 rounded-xl border border-gray-200/5 overflow-x-hidden">
             <SyntaxHighlighter
               language="typescript"
               style={dracula}
@@ -239,24 +254,11 @@ name: "User One",
               }}
               wrapLines={true}
             >
-              {`import { createClient } from "notdb";
-
-const db = createClient({
-  apiKey: "YOUR_API_KEY",
-  schema: {
-  users: {
-    properties: {
-      name: { type: "string", required: true },
-      email: { type: "string", required: true, unique: true },
-      age: { type: "number" },
-    },
-  },
-}
-});`}
+              {notdbsetup}
             </SyntaxHighlighter>
           </div>
 
-          <div className="bg-black/10 border border-gray-200/5 rounded-2xl p-6">
+          <div className="bg-black/10 border border-gray-200/5 rounded-2xl p-6 overflow-x-hidden">
             <div className="flex flex-wrap gap-2 mb-6">
               {crud.map((item, index) => (
                 <button
