@@ -3,12 +3,7 @@
 import Link from "next/link";
 import Ttile from "@/components/ttile";
 import { SiGithub, SiX } from "react-icons/si";
-import {
-  SiTypescript,
-  SiJavascript,
-  SiReact,
-  SiNodedotjs,
-} from "react-icons/si";
+import { SiTypescript } from "react-icons/si";
 import Cube3D from "@/components/cube-3d";
 import { useState, useEffect } from "react";
 
@@ -23,10 +18,24 @@ export default function Home() {
   const crud = [
     {
       title: "Create",
-      code: `db.users.insert({
+      code: `//Insert single
+db.users.insert({
       email: "johndoe@example.com",
       name: "John Doe",
-  })`,
+  })
+
+//Insert multiple
+db.users.insertBulk([
+  {
+email:"user@example.com",
+name: "User One",
+  },
+  {
+  email:"user2@example.com",
+  name: "User Two",
+  },
+])
+  `,
     },
     {
       title: "Read",
@@ -38,7 +47,7 @@ export default function Home() {
     },
     {
       title: "Delete",
-      code: `db.users.delete({ id: "user123" })`,
+      code: `db.users.delete("user123")`,
     },
     {
       title: "Aggregate",
