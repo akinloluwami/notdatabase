@@ -13,7 +13,6 @@ import Ttile from "@/components/ttile";
 export default function CollectionPage() {
   const { dbId, collectionName } = useParams();
 
-  // Fetch database metadata
   const {
     data: dbMeta,
     isLoading: isLoadingDb,
@@ -25,7 +24,6 @@ export default function CollectionPage() {
     enabled: !!dbId,
   });
 
-  // Fetch collections for sidebar
   const {
     data: collections,
     isLoading: isLoadingCollections,
@@ -37,7 +35,6 @@ export default function CollectionPage() {
     enabled: !!dbId,
   });
 
-  // Fetch documents from the collection
   const {
     data: documents,
     isLoading: isLoadingDocuments,
@@ -53,7 +50,6 @@ export default function CollectionPage() {
     enabled: !!dbId && !!collectionName,
   });
 
-  // Fetch document count
   const { data: countData, isLoading: isLoadingCount } = useQuery({
     queryKey: ["collection-count", dbId, collectionName],
     queryFn: () =>
@@ -80,10 +76,13 @@ export default function CollectionPage() {
         {isLoadingDb || isLoadingCollections || isLoadingDocuments ? (
           <>
             <Ttile>Loading Collection - NotDatabase</Ttile>
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center min-h-screen">
               <div className="text-center">
-                <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-gray-400" />
-                <p className="text-xl text-gray-400">Loading collection...</p>
+                <Loader2
+                  size={24}
+                  className="animate-spin mx-auto text-gray-400"
+                />
+                <p className="text-gray-400">Loading collection...</p>
               </div>
             </div>
           </>
@@ -97,7 +96,7 @@ export default function CollectionPage() {
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="relative">
+                {/* <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     placeholder="Search documents..."
@@ -107,7 +106,7 @@ export default function CollectionPage() {
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Document
-                </Button>
+                </Button> */}
               </div>
             </header>
 
