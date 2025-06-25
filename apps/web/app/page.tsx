@@ -81,10 +81,7 @@ const db = createClient({
 
       <div className="flex justify-between max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center gap-1">
-          <img
-            src="https://api.iconify.design/solar:box-minimalistic-bold-duotone.svg?color=%23888888"
-            className="w-6"
-          />
+          <img src="/logo.png" className="w-6" />
           <p className="font-semibold">NotDatabase</p>
         </div>
         <div className="text-sm text-gray-500 flex items-center gap-2">
@@ -111,7 +108,6 @@ const db = createClient({
         </div>
       </div>
 
-      {/* Hero Section */}
       <div className="p-5">
         <div className="max-w-7xl mx-auto py-8 border border-gray-200/5 rounded-2xl flex justify-center items-center relative">
           <div
@@ -291,7 +287,6 @@ const db = createClient({
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="border-t border-gray-200/5 mt-16">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="flex justify-between">
