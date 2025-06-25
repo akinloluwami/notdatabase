@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { authClient } from "../lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,15 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import Ttile from "@/components/ttile";
 
 export default function SignupPage() {
-  const router = useRouter();
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState<string | null>(null);
-
   const handleSocialSignup = async (provider: "google" | "github") => {
     setIsLoading(provider);
     await authClient.signIn.social({
@@ -32,10 +26,11 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
       <Ttile>Signup</Ttile>
-      {/* Logo */}
-      <img src="/logo.png" alt="Logo" className="w-16 h-16 mb-8" />
+
+      <Link href="/">
+        <img src="/logo.png" alt="Logo" className="w-16 h-16 mb-8" />
+      </Link>
       <div className="w-full max-w-md">
-        {/* Signup Form */}
         <Card className="bg-gray900 border-gray-100/20">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-white">
@@ -46,13 +41,6 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {errors.general && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{errors.general}</AlertDescription>
-              </Alert>
-            )}
-            {/* Social Signup Buttons */}
             <div className="space-y-3">
               <Button
                 variant="outline"
@@ -77,7 +65,6 @@ export default function SignupPage() {
             </div>
           </CardContent>
         </Card>
-        {/* Login Link */}
         <div className="mt-6 text-center">
           <p className="text-gray-400">
             Already have an account?{" "}
