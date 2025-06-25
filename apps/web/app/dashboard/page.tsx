@@ -36,7 +36,6 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch databases
   const {
     data: databases,
     isLoading: isDbLoading,
@@ -47,7 +46,6 @@ export default function DashboardPage() {
     queryFn: apiClient.database.list,
   });
 
-  // Create database mutation
   const createDatabaseMutation = useMutation({
     mutationFn: (name: string) => apiClient.database.create(name),
     onSuccess: (data) => {
@@ -82,10 +80,7 @@ export default function DashboardPage() {
       <SidebarProvider>
         <Sidebar>
           <SidebarHeader className="flex flex-row items-center">
-            <img
-              src="https://api.iconify.design/solar:box-minimalistic-bold-duotone.svg?color=%23888888"
-              className="w-8"
-            />
+            <img src="/logo.png" className="w-8" />
             <p className="text-lg font-semibold">NotDatabase</p>
           </SidebarHeader>
           <SidebarContent className="p-2">
@@ -98,14 +93,14 @@ export default function DashboardPage() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
+              {/* <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/dashboard/settings">
                     <Settings className="h-4 w-4" />
                     Settings
                   </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
