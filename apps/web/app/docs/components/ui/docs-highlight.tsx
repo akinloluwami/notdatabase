@@ -7,7 +7,7 @@ export type DocsHighlightProps = {
 
 const DocsHighlight = ({ children, className = "" }: DocsHighlightProps) => (
   <mark
-    className={`bg-yellow-300/20 text-yellow-200 px-1 py-0.5 rounded font-semibold ${className}`}
+    className={`bg-white/5 italic text-gray-400 text-sm px-1 py-0.5 rounded font-semibold ${className}`}
   >
     {children}
   </mark>
