@@ -24,17 +24,17 @@ export default function Home() {
     {
       title: "Create",
       code: `db.users.insert({
-      id: "user123",
+      email: "johndoe@example.com",
       name: "John Doe",
   })`,
     },
     {
       title: "Read",
-      code: `const user = db.users.find({ id: "user123" })`,
+      code: `const user = db.users.find("user123")`,
     },
     {
       title: "Update",
-      code: `db.users.update({ id: "user123" }, { name: "Jane Doe" })`,
+      code: `db.users.update("user123", { name: "Jane Doe" })`,
     },
     {
       title: "Delete",
@@ -42,8 +42,10 @@ export default function Home() {
     },
     {
       title: "Aggregate",
-      code: `//Coming soon
-const count = db.users.count({ age: { $gt: 18 } })`,
+      code: `const count = db.users.count()      
+
+//More aggregation functions coming soon!
+      `,
     },
   ];
 
