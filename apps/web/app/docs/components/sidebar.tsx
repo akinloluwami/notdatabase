@@ -60,7 +60,7 @@ const Sidebar = () => {
   const pathname = usePathname();
 
   return (
-    <div className="w-64">
+    <div className="w-64 fixed top-20 h-full hidden md:block">
       <div className="space-y-4 w-full">
         {pages.map((page) => (
           <div key={page.group} className="w-full">
