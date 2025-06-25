@@ -20,7 +20,9 @@ const Databases = () => {
         You can create one database and define multiple{" "}
         <strong>collections</strong> inside it, like this:
       </DocsText>
-      <DocsCodeBlock>{`const db = createClient({
+      <DocsCodeBlock>{` import { createClient } from "notdb";
+      
+const db = createClient({
   apiKey: "your_api_key",
   schema: {
     users: {
