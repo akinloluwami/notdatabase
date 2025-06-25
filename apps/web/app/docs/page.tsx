@@ -5,6 +5,7 @@ import DocsCard from "./components/ui/docs-card";
 import DocsLink from "./components/ui/docs-link";
 import DocsList from "./components/ui/docs-list";
 import DocsQuote from "./components/ui/docs-quote";
+import DocsHighlight from "./components/ui/docs-highlight";
 
 const sections = [
   {
@@ -54,7 +55,9 @@ const Docs = () => {
         <br /> <br />
         It stores data as JSON documents under collections, with optional schema
         validation for each one. Every document automatically includes metadata
-        like _id, createdAt, and updatedAt. <br /> <br />{" "}
+        like <DocsHighlight>_id</DocsHighlight>,{" "}
+        <DocsHighlight>createdAt</DocsHighlight>, and{" "}
+        <DocsHighlight>updatedAt</DocsHighlight>. <br /> <br />{" "}
         <b>
           Think of it like Firestore, but with full TypeScript type safety and
           better DX.
