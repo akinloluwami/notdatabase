@@ -27,7 +27,7 @@ export default function RootLayout({
           </Link>
         </div>
       </div>
-      <div className="flex gap-x-10">
+      <div className="flex lg:ap-x-10">
         <Sidebar />
         {children}
       </div>
