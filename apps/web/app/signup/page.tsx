@@ -25,7 +25,7 @@ export default function SignupPage() {
     setIsLoading(provider);
     await authClient.signIn.social({
       provider,
-      callbackURL: `${window.location.origin}/dashboard`,
+      callbackURL: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
     });
   };
 
