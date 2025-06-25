@@ -64,7 +64,6 @@ name: "User One",
     <>
       <Ttile>NotDatabase</Ttile>
 
-      {/* Header */}
       <div className="flex justify-between max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center gap-1">
           <img
