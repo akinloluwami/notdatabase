@@ -6,6 +6,7 @@ import DocsLink from "./components/ui/docs-link";
 import DocsList from "./components/ui/docs-list";
 import DocsQuote from "./components/ui/docs-quote";
 import DocsHighlight from "./components/ui/docs-highlight";
+import DocsContainer from "./components/ui/docs-container";
 
 const sections = [
   {
@@ -44,7 +45,7 @@ const sections = [
 
 const Docs = () => {
   return (
-    <div>
+    <DocsContainer>
       <DocsHeading level={1}>What is NotDatabase?</DocsHeading>
       <DocsText>
         NotDatabase is a schema-based key-value database built for developers
@@ -97,7 +98,7 @@ const Docs = () => {
         <li>Internal dashboards</li>
         <li>Anyone tired of fighting with “real” databases for small apps</li>
       </DocsList>
-    </div>
+    </DocsContainer>
   );
 };
 
