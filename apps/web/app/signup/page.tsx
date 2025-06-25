@@ -30,14 +30,11 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
       <Ttile>Signup</Ttile>
+      {/* Logo */}
+      <img src="/logo.png" alt="Logo" className="w-16 h-16 mb-8" />
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-          <p className="text-gray-400">Join us and get started</p>
-        </div>
-
         {/* Signup Form */}
         <Card className="bg-gray900 border-gray-100/20">
           <CardHeader className="space-y-1">
@@ -55,7 +52,6 @@ export default function SignupPage() {
                 <AlertDescription>{errors.general}</AlertDescription>
               </Alert>
             )}
-
             {/* Social Signup Buttons */}
             <div className="space-y-3">
               <Button
@@ -81,7 +77,6 @@ export default function SignupPage() {
             </div>
           </CardContent>
         </Card>
-
         {/* Login Link */}
         <div className="mt-6 text-center">
           <p className="text-gray-400">

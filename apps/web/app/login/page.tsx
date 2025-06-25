@@ -33,13 +33,10 @@ export default function LoginPage() {
   return (
     <>
       <Ttile>Login - NotDatabase</Ttile>
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+        {/* Logo */}
+        <img src="/logo.png" alt="Logo" className="w-16 h-16 mb-8" />
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-400">Sign in to your account</p>
-          </div>
-
           {/* Login Form */}
           <Card className="bg-gray900 border-gray-100/20">
             <CardHeader className="space-y-1">
@@ -55,7 +52,6 @@ export default function LoginPage() {
                   <AlertDescription>{errors.general}</AlertDescription>
                 </Alert>
               )}
-
               {/* Social Login Buttons */}
               <div className="space-y-3">
                 <Button
@@ -81,7 +77,6 @@ export default function LoginPage() {
               </div>
             </CardContent>
           </Card>
-
           {/* Signup Link */}
           <div className="mt-6 text-center">
             <p className="text-gray-400">
