@@ -29,7 +29,9 @@ const Authentication = () => {
       <DocsText>
         Pass your API key to the SDK when creating your client:
       </DocsText>
-      <DocsCodeBlock>{`const db = createClient({
+      <DocsCodeBlock>{`import { createClient } from "notdb";
+      
+const db = createClient({
   apiKey: "api_key",
   schema: { /* ... */ },
 });`}</DocsCodeBlock>
