@@ -22,7 +22,7 @@ const HowItWorks = () => {
       <DocsHeading level={2}>1. You define your schema</DocsHeading>
       <DocsText className="mb-2">In your SDK config:</DocsText>
       <DocsCodeBlock>{`const db = createClient({
-  apiKey: "your_api_key", // optional for temp DBs
+  apiKey: "your_api_key",
   schema: {
     users: {
       properties: {
@@ -40,9 +40,9 @@ const HowItWorks = () => {
         Insert a document into your collection:
       </DocsText>
       <DocsCodeBlock>{`await db.users.insert({
-  name: "Bug",
-  email: "bug@notdb.io",
-  age: 19,
+  name: "Richard Hendricks",
+  email: "richard@piedpiper.com",
+  age: 28,
 });`}</DocsCodeBlock>
       <DocsText className="mb-2">The SDK:</DocsText>
       <DocsList>
@@ -76,7 +76,7 @@ const HowItWorks = () => {
       <DocsHeading level={2}>
         4. You can update, delete, and count too
       </DocsHeading>
-      <DocsCodeBlock>{`await db.users.update("abc123", { age: 20 });
+      <DocsCodeBlock>{`await db.users.update("abc123", { age: 29 });
 await db.users.delete("abc123");
 const count = await db.users.count();`}</DocsCodeBlock>
 

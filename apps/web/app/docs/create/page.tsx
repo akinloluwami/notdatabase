@@ -19,8 +19,8 @@ const Create = () => {
       </DocsHeading>
       <DocsText>Adds a single document.</DocsText>
       <DocsCodeBlock>{`await db.users.insert({
-  name: "Bug",
-  email: "bug@example.com",
+  name: "Dinesh Chugtai",
+  email: "dinesh@piedpiper.com",
   isAdmin: false,
 });`}</DocsCodeBlock>
       <DocsHeading level={3}>Behavior:</DocsHeading>
@@ -37,8 +37,8 @@ const Create = () => {
       </DocsHeading>
       <DocsText>Inserts multiple documents at once.</DocsText>
       <DocsCodeBlock>{`await db.users.insertBulk([
-  { name: "Bug", email: "bug@a.com", isAdmin: false },
-  { name: "Martha", email: "martha@a.com", isAdmin: true },
+  { name: "Jared Dunn", email: "jared@piedpiper.com", isAdmin: false },
+  { name: "Erlich Bachman", email: "erlich@piedpiper.com", isAdmin: true },
 ]);`}</DocsCodeBlock>
       <DocsHeading level={3}>Notes:</DocsHeading>
       <DocsList>
@@ -54,7 +54,7 @@ const Create = () => {
       </DocsText>
       <DocsCodeBlock>{`await db.users.insert({
   key: "custom_id",
-  name: "Richard Hendricks",
+  name: "Monica Hall",
   isAdmin: true,
 });`}</DocsCodeBlock>
       <DocsText>Otherwise, NotDatabase generates a nanoid for you.</DocsText>

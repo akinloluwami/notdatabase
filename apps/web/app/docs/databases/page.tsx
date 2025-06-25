@@ -29,16 +29,16 @@ const Databases = () => {
         email: { type: "string", required: true, unique: true },
       },
     },
-    posts: {
+    companies: {
       properties: {
-        title: { type: "string", required: true },
-        body: { type: "string" },
+        name: { type: "string", required: true },
+        ceo: { type: "string" },
       },
     },
   },
 });`}</DocsCodeBlock>
       <DocsText>
-        Here, <strong>users</strong> and <strong>posts</strong> are both
+        Here, <strong>users</strong> and <strong>companies</strong> are both
         collections inside the same database.
       </DocsText>
 

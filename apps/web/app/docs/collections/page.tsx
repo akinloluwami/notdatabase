@@ -26,27 +26,27 @@ const Collections = () => {
       <DocsCodeBlock>{`const db = createClient({
   apiKey: "your_api_key",
   schema: {
-    products: {
+    users: {
       properties: {
         name: { type: "string", required: true },
-        price: { type: "number" },
-        inStock: { type: "boolean", default: true },
+        email: { type: "string", required: true, unique: true },
+        isAdmin: { type: "boolean", default: false },
       },
     },
   },
 });`}</DocsCodeBlock>
       <DocsText>
-        This creates a <code>products</code> collection with three fields:
+        This creates a <code>users</code> collection with three fields:
       </DocsText>
       <DocsList>
         <li>
           <code>name</code> (required string)
         </li>
         <li>
-          <code>price</code> (optional number)
+          <code>email</code> (required string, unique)
         </li>
         <li>
-          <code>inStock</code> (optional boolean with a default)
+          <code>isAdmin</code> (optional boolean with a default)
         </li>
       </DocsList>
 

@@ -30,7 +30,7 @@ const Authentication = () => {
         Pass your API key to the SDK when creating your client:
       </DocsText>
       <DocsCodeBlock>{`const db = createClient({
-  apiKey: "your_api_key",
+  apiKey: "api_key",
   schema: { /* ... */ },
 });`}</DocsCodeBlock>
       <DocsText>

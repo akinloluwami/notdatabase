@@ -23,14 +23,10 @@ const Documents = () => {
         Use the <code>.insert()</code> method to add a new document to a
         collection:
       </DocsText>
-      <DocsCodeBlock>{`await db.products.insert({
-  name: "Air Max 90",
-  price: 120,
+      <DocsCodeBlock>{`await db.users.insert({
+  name: "Jian-Yang",
+  email: "jianyang@piedpiper.com",
 });`}</DocsCodeBlock>
-      <DocsText>
-        Default values (like <code>inStock: true</code>) are auto-filled. If a
-        required field is missing, the insert fails.
-      </DocsText>
 
       <DocsHeading level={2}>📄 What a Document Looks Like</DocsHeading>
       <DocsText>Every document automatically includes:</DocsText>
@@ -49,9 +45,8 @@ const Documents = () => {
       <DocsText>Example:</DocsText>
       <DocsCodeBlock>{`{
   "_id": "abc123",
-  "name": "Air Max 90",
-  "price": 120,
-  "inStock": true,
+  "name": "Jian-Yang",
+  "email": "jianyang@piedpiper.com",
   "createdAt": "2025-06-19T12:00:00Z",
   "updatedAt": "2025-06-19T12:00:00Z"
 }`}</DocsCodeBlock>

@@ -28,6 +28,7 @@ const Aggregation = () => {
       <DocsCodeBlock>{`const admins = await db.users.count({
   filter: {
     isAdmin: true,
+    name: "Bertram Gilfoyle",
   },
 });`}</DocsCodeBlock>
 

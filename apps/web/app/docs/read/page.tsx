@@ -30,49 +30,59 @@ const Read = () => {
       <DocsTable>
         <thead>
           <tr>
-            <th>Option</th>
-            <th>Type</th>
-            <th>Description</th>
+            <th className="px-4 py-3 border border-gray-700 rounded-tl-lg">
+              Option
+            </th>
+            <th className="px-4 py-3 border border-gray-700">Type</th>
+            <th className="px-4 py-3 border border-gray-700 rounded-tr-lg">
+              Description
+            </th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>filter</code>
             </td>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>Partial&lt;Schema&gt;</code>
             </td>
-            <td>Filters by matching fields</td>
+            <td className="px-4 py-3 border border-gray-700">
+              Filters by matching fields
+            </td>
           </tr>
           <tr>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>sort</code>
             </td>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>string</code>
             </td>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               Sort by a field (use <code>-</code> prefix for descending)
             </td>
           </tr>
           <tr>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>limit</code>
             </td>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>number</code>
             </td>
-            <td>Max number of results to return</td>
+            <td className="px-4 py-3 border border-gray-700">
+              Max number of results to return
+            </td>
           </tr>
           <tr>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>offset</code>
             </td>
-            <td>
+            <td className="px-4 py-3 border border-gray-700">
               <code>number</code>
             </td>
-            <td>Skips N number of results (for pagination)</td>
+            <td className="px-4 py-3 border border-gray-700">
+              Skips N number of results (for pagination)
+            </td>
           </tr>
         </tbody>
       </DocsTable>
@@ -86,12 +96,6 @@ const Read = () => {
       <DocsCodeBlock>{`const user = await db.users.get("user_abc123", {
   select: { name: true, email: true },
 });`}</DocsCodeBlock>
-      <DocsCallout type="info">
-        <DocsText className="mb-0">
-          <code>_id</code>, <code>createdAt</code>, and <code>updatedAt</code>{" "}
-          are always returned by default — even if not selected.
-        </DocsText>
-      </DocsCallout>
     </DocsContainer>
   );
 };

@@ -17,13 +17,13 @@ const Update = () => {
       <DocsHeading level={2}>
         ✏️ <code>update()</code>
       </DocsHeading>
-      <DocsCodeBlock>{`await db.users.update("user_abc123", {
-  name: "Jane Doe",
+      <DocsCodeBlock>{`await db.users.update("user_gilfoyle", {
+  name: "Bertram Gilfoyle",
   isAdmin: true,
 });`}</DocsCodeBlock>
       <DocsText>
         This updates just the <code>name</code> and <code>isAdmin</code> fields
-        of the document with <code>_id: "user_abc123"</code>.
+        of the document with <code>_id: "user_gilfoyle"</code>.
       </DocsText>
 
       <DocsHeading level={2}>Behavior</DocsHeading>

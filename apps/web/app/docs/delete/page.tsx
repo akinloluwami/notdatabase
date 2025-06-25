@@ -17,10 +17,10 @@ const Delete = () => {
       <DocsHeading level={2}>
         🗑️ <code>delete()</code>
       </DocsHeading>
-      <DocsCodeBlock>{`await db.users.delete("user_abc123");`}</DocsCodeBlock>
+      <DocsCodeBlock>{`await db.users.delete("user_jianyang");`}</DocsCodeBlock>
       <DocsText>
-        This deletes the document with <code>_id: "user_abc123"</code> from the{" "}
-        <code>users</code> collection.
+        This deletes the document with <code>_id: "user_jianyang"</code> from
+        the <code>users</code> collection.
       </DocsText>
 
       <DocsHeading level={2}>Behavior</DocsHeading>
