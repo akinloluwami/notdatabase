@@ -40,7 +40,6 @@ export default function DatabaseSettingsPage() {
   const [copiedValue, setCopiedValue] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch database metadata
   const {
     data: dbMeta,
     isLoading: isLoadingDb,
@@ -52,7 +51,6 @@ export default function DatabaseSettingsPage() {
     enabled: !!dbId,
   });
 
-  // Delete database mutation
   const deleteDatabaseMutation = useMutation({
     mutationFn: () => apiClient.database.delete(dbId as string),
     onSuccess: () => {
@@ -173,28 +171,6 @@ export default function DatabaseSettingsPage() {
                     <Badge variant="secondary" className="w-fit">
                       Active
                     </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Database Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-gray-900/50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-400">
-                      {dbMeta?.collectionCount || 0}
-                    </div>
-                    <div className="text-sm text-gray-400">Collections</div>
-                  </div>
-                  <div className="text-center p-4 bg-gray-900/50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-400">
-                      {dbMeta?.documentCount || 0}
-                    </div>
-                    <div className="text-sm text-gray-400">Documents</div>
                   </div>
                 </div>
               </CardContent>
