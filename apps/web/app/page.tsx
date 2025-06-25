@@ -6,6 +6,8 @@ import { SiGithub, SiX } from "react-icons/si";
 import { SiTypescript } from "react-icons/si";
 import Cube3D from "@/components/cube-3d";
 import { useState, useEffect } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState(0);
@@ -229,9 +231,17 @@ name: "User One",
 
         <div className="grid lg:grid-cols-2 gap-4">
           <div className="bg-black/10 p-6 rounded-xl border border-gray-200/5">
-            <pre className="text-sm text-gray-300 overflow-x-auto">
-              {`
-import { createClient } from "notdb";
+            <SyntaxHighlighter
+              language="typescript"
+              style={dracula}
+              customStyle={{
+                background: "none",
+                fontSize: "0.875rem",
+                color: "#f8f8f2",
+              }}
+              wrapLines={true}
+            >
+              {`import { createClient } from "notdb";
 
 const db = createClient({
   apiKey: "YOUR_API_KEY",
@@ -244,9 +254,8 @@ const db = createClient({
     },
   },
 }
-});
-`}
-            </pre>
+});`}
+            </SyntaxHighlighter>
           </div>
 
           <div className="bg-black/10 border border-gray-200/5 rounded-2xl p-6">
@@ -266,9 +275,18 @@ const db = createClient({
               ))}
             </div>
 
-            <pre className="text-sm text-gray-300 overflow-x-auto">
-              <code>{crud[activeTab].code}</code>
-            </pre>
+            <SyntaxHighlighter
+              language="javascript"
+              style={dracula}
+              customStyle={{
+                background: "none",
+                fontSize: "0.875rem",
+                color: "#f8f8f2",
+              }}
+              wrapLines={true}
+            >
+              {crud[activeTab].code}
+            </SyntaxHighlighter>
           </div>
         </div>
       </div>
