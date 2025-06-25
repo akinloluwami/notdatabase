@@ -1,4 +1,7 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { pages } from "../sidebar-pages";
 import DocsLink from "./docs-link";
 
@@ -15,14 +18,23 @@ function getPrevNext(currentPath: string) {
   };
 }
 
-const DocsContainer = ({
-  children,
-  currentPath,
-}: {
-  children: React.ReactNode;
-  currentPath?: string;
-}) => {
-  const { prev, next } = getPrevNext(currentPath!);
+function getCurrentPageTitle(currentPath: string) {
+  const flat = flattenPages();
+  const page = flat.find((p) => p.href === currentPath);
+  return page ? page.name : "Docs";
+}
+
+const DocsContainer = ({ children }: { children: React.ReactNode }) => {
+  const pathname = usePathname();
+  const { prev, next } = getPrevNext(pathname);
+  const pageTitle = getCurrentPageTitle(pathname);
+
+  useEffect(() => {
+    if (pageTitle) {
+      document.title = pageTitle + " | Docs";
+    }
+  }, [pageTitle]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 w-full lg:ml-80">
       {children}
