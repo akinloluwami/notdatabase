@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Ttile from "@/components/ttile";
-import { SiGithub } from "react-icons/si";
+import { SiGithub, SiX } from "react-icons/si";
 import {
   SiTypescript,
   SiJavascript,
@@ -364,13 +364,29 @@ const db = createClient({
                 </li>
               </ul>
             </div> */}
+            <div className="flex items-center gap-x-2">
+              <Link
+                href="https://github.com/akinloluwami/notdatabase"
+                className="p-1 hover:bg-white/10 rounded-sm transition-colors"
+                target="_blank"
+              >
+                <SiGithub size={20} />
+              </Link>
+              <Link
+                href="https://x.com/notdatabase"
+                className="p-1 hover:bg-white/10 rounded-sm transition-colors"
+                target="_blank"
+              >
+                <SiX size={20} />
+              </Link>
+            </div>
           </div>
 
           <div className="border-t border-gray-200/5 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
               © {currentYear} NotDatabase. All rights reserved.
             </p>
-            <div className="flex gap-4 mt-4 md:mt-0">
+            {/* <div className="flex gap-4 mt-4 md:mt-0">
               <Link
                 href="/privacy"
                 className="text-gray-400 hover:text-white text-sm"
@@ -383,7 +399,7 @@ const db = createClient({
               >
                 Terms
               </Link>
-            </div>
+            </div> */}
           </div>
         </div>
       </footer>
