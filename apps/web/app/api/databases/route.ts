@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
           COUNT(kv.key) as document_count
         FROM databases d
         LEFT JOIN kv_store kv ON d.id = kv.db_id
-        WHERE d.owner_id = ?
+        WHERE d.owner_id = ? AND d.deleted_at IS NULL
         GROUP BY d.id, d.name
       `,
       args: [session.user.id],
