@@ -5,6 +5,7 @@ import {
   InferSchemaProps,
   SelectFields,
   InferSelected,
+  InsertSchemaProps,
 } from "./types.js";
 import {
   getRequiredFields,
@@ -31,7 +32,7 @@ export function createClient<S extends SchemaDefinition>(
 
   return handler as {
     [K in keyof S]: {
-      insert: (data: InferSchemaProps<S[K]["properties"]>) => Promise<any>;
+      insert: (data: InsertSchemaProps<S[K]["properties"]>) => Promise<any>;
       find: (options?: {
         filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
         sort?: string;
@@ -48,7 +49,7 @@ export function createClient<S extends SchemaDefinition>(
       ) => Promise<any>;
       delete: (id: string) => Promise<any>;
       insertBulk: (
-        data: InferSchemaProps<S[K]["properties"]>[]
+        data: InsertSchemaProps<S[K]["properties"]>[]
       ) => Promise<any>;
       count: (options?: {
         filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
@@ -75,6 +76,10 @@ class CollectionClient {
       if (!(field in payload)) {
         throw new Error(`Missing required field: ${field}`);
       }
+    }
+
+    if (data.key !== undefined) {
+      payload.key = data.key;
     }
 
     const res = await fetch(`${this.baseUrl}/${this.collection}/docs`, {
@@ -219,6 +224,10 @@ class CollectionClient {
             `Missing required field '${field}' in one of the documents.`
           );
         }
+      }
+
+      if (doc.key !== undefined) {
+        withDefaults.key = doc.key;
       }
 
       return {
