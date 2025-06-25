@@ -3,6 +3,8 @@ import DocsHeading from "./components/ui/docs-heading";
 import DocsText from "./components/ui/docs-text";
 import DocsCard from "./components/ui/docs-card";
 import DocsLink from "./components/ui/docs-link";
+import DocsList from "./components/ui/docs-list";
+import DocsQuote from "./components/ui/docs-quote";
 
 const sections = [
   {
@@ -44,10 +46,19 @@ const Docs = () => {
     <div>
       <DocsHeading level={1}>What is NotDatabase?</DocsHeading>
       <DocsText>
-        NotDatabase is a modern, flexible, and developer-friendly database
-        platform designed to make data storage, retrieval, and management simple
-        and efficient. Explore the docs to learn how to get started, use the
-        SDK, and master core concepts and database functions.
+        NotDatabase is a schema-based key-value database built for developers
+        who want structure without the bloat. <br /> <br /> Unlike traditional
+        databases that require complex migrations, query languages, or rigid
+        schemas, NotDatabase offers a simpler way: define your data model once,
+        and it handles validation, constraints, and storage behind the scenes.{" "}
+        <br /> <br />
+        It stores data as JSON documents under collections, with optional schema
+        validation for each one. Every document automatically includes metadata
+        like _id, createdAt, and updatedAt. <br /> <br />{" "}
+        <b>
+          Think of it like Firestore, but with full TypeScript type safety and
+          better DX.
+        </b>
       </DocsText>
 
       <DocsHeading level={2} className="mt-8">
@@ -55,28 +66,34 @@ const Docs = () => {
       </DocsHeading>
 
       <DocsText>
-        NotDatabase was created to address the complexities and limitations of
-        traditional databases. It aims to provide a more intuitive and flexible
-        approach to data management, allowing developers to focus on building
-        applications without getting bogged down by database intricacies.
+        Databases can become unnecessarily complicated for projects. <br />{" "}
+        You're either:
       </DocsText>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        {sections.map((section) => (
-          <DocsCard key={section.group}>
-            <DocsHeading level={3} className="mb-2">
-              {section.group}
-            </DocsHeading>
-            <ul className="space-y-1">
-              {section.items.map((item) => (
-                <li key={item.href}>
-                  <DocsLink href={item.href}>{item.name}</DocsLink>
-                </li>
-              ))}
-            </ul>
-          </DocsCard>
-        ))}
-      </div>
+      <DocsList>
+        <li>fighting with SQL schemas and migration tools, or</li>
+        <li>writing spaghetti validation code in NoSQL environments.</li>
+      </DocsList>
+
+      <DocsText>
+        NotDatabase was built because developers deserve something lightweight
+        but structured. A tool that feels native in TypeScript. One that doesn’t
+        ask you to choose between structure and flexibility.
+      </DocsText>
+
+      <DocsQuote>
+        You define your schema in TS, and everything just works — type-safe SDK,
+        server validation, and simple APIs.
+      </DocsQuote>
+
+      <DocsText>It's for:</DocsText>
+
+      <DocsList>
+        <li>MVPs and side projects</li>
+        <li>Event logs, audit trails, feedback systems</li>
+        <li>Internal dashboards</li>
+        <li>Anyone tired of fighting with “real” databases for small apps</li>
+      </DocsList>
     </div>
   );
 };
