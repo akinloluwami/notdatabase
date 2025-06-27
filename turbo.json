@@ -23,7 +23,8 @@
         "GITHUB_CLIENT_SECRET",
         "NEXT_PUBLIC_POSTHOG_KEY",
         "NEXT_PUBLIC_POSTHOG_HOST",
-        "SOCKET_SECRET"
+        "SOCKET_SECRET",
+        "REDIS_URL"
       ]
     },
     "lint": {
