@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { turso } from "../../lib/turso";
 import { logDbEvent } from "../../lib/log-event";
+import { publishDbEvent } from "../../lib/publish-event";
 import { getDbIdFromApiKey } from "../../lib/auth";
 
 // POST /api/[collection]/bulk - Insert multiple documents
@@ -98,6 +99,16 @@ export async function POST(
       action: "CREATE",
       docId: undefined, // For bulk operations, we don't track individual doc IDs
     });
+
+    // Publish events for each inserted document
+    for (const doc of insertedDocs) {
+      await publishDbEvent({
+        dbId,
+        collection,
+        type: "insert",
+        doc,
+      });
+    }
 
     return NextResponse.json(insertedDocs, { status: 201 });
   } catch (err) {

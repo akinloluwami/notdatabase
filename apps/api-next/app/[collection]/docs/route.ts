@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { turso } from "../../lib/turso";
 import { validateAgainstSchema } from "../../lib/schema";
 import { logDbEvent } from "../../lib/log-event";
+import { publishDbEvent } from "../../lib/publish-event";
 import { getDbIdFromApiKey } from "../../lib/auth";
 
 // GET /api/[collection]/docs - Get documents from collection
@@ -193,6 +194,13 @@ export async function POST(
       collection,
       action: "CREATE",
       docId: key,
+    });
+
+    await publishDbEvent({
+      dbId,
+      collection,
+      type: "insert",
+      doc,
     });
 
     return NextResponse.json(doc, { status: 201 });

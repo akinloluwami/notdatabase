@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { turso } from "../../../lib/turso";
 import { logDbEvent } from "../../../lib/log-event";
+import { publishDbEvent } from "../../../lib/publish-event";
 import { getDbIdFromApiKey } from "../../../lib/auth";
 
 // GET /api/[collection]/docs/[id] - Get a specific document
@@ -138,6 +139,13 @@ export async function PATCH(
     docId: id,
   });
 
+  await publishDbEvent({
+    dbId,
+    collection,
+    type: "update",
+    doc: updated,
+  });
+
   return NextResponse.json(updated);
 }
 
@@ -158,6 +166,26 @@ export async function DELETE(
 
   const { collection, id } = await params;
 
+  // Get the document before deleting it for the event
+  const { rows } = await turso.execute({
+    sql: `
+      SELECT value FROM kv_store
+      WHERE db_id = ? AND collection = ? AND key = ?
+      LIMIT 1
+    `,
+    args: [dbId, collection, id],
+  });
+
+  if (rows.length === 0) {
+    return NextResponse.json({ error: "Document not found" }, { status: 404 });
+  }
+
+  const value = rows[0].value;
+  let deletedDoc = null;
+  if (typeof value === "string") {
+    deletedDoc = JSON.parse(value);
+  }
+
   const { rowsAffected } = await turso.execute({
     sql: `
       DELETE FROM kv_store
@@ -175,6 +203,13 @@ export async function DELETE(
     collection,
     action: "DELETE",
     docId: id,
+  });
+
+  await publishDbEvent({
+    dbId,
+    collection,
+    type: "delete",
+    doc: deletedDoc,
   });
 
   return NextResponse.json({ message: "Document deleted" });
