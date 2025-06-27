@@ -21,5 +21,15 @@ export async function publishDbEvent({
     data: doc,
   };
 
-  await redis.publish(channel, JSON.stringify(payload));
+  await redis
+    .publish(channel, JSON.stringify(payload))
+    .then(() => {
+      console.log(`Published ${type} event to channel ${channel}`, payload);
+    })
+    .catch((err) => {
+      console.error(
+        `Failed to publish ${type} event to channel ${channel}`,
+        err
+      );
+    });
 }
