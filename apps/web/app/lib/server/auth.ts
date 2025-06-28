@@ -14,6 +14,7 @@ const dialect = new LibsqlDialect({
 });
 
 export const auth = betterAuth({
+  trustedOrigins: ["https://notdatabase.com", "https://www.notdatabase.com"],
   database: {
     dialect,
     type: "sqlite",
