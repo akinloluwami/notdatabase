@@ -15,6 +15,32 @@ import {
 
 const DEFAULT_BASE_URL = "https://api.notdatabase.com";
 
+function createRealtimeMethods(baseUrl: string, apiKey: string) {
+  return {
+    async generateToken(options?: {
+      expiresIn?: string;
+      collections?: string[];
+    }): Promise<string> {
+      const res = await fetch(`${baseUrl}/realtime/token`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(options ?? {}),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to generate realtime token");
+      }
+
+      const json = await res.json();
+      return json.token;
+    },
+  };
+}
+
 export function createClient<S extends SchemaDefinition>(
   opts: Omit<CreateClientOptions, "baseUrl"> & { schema: S }
 ) {
@@ -30,31 +56,38 @@ export function createClient<S extends SchemaDefinition>(
     );
   }
 
-  return handler as {
-    [K in keyof S]: {
-      insert: (data: InsertSchemaProps<S[K]["properties"]>) => Promise<any>;
-      find: (options?: {
-        filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
-        sort?: string;
-        limit?: number;
-        offset?: number;
-      }) => Promise<any[]>;
-      get: <Select extends SelectFields<InferSchemaProps<S[K]["properties"]>>>(
-        id: string,
-        options?: { select?: Select }
-      ) => Promise<InferSelected<InferSchemaProps<S[K]["properties"]>, Select>>;
-      update: (
-        id: string,
-        data: Partial<InferSchemaProps<S[K]["properties"]>>
-      ) => Promise<any>;
-      delete: (id: string) => Promise<any>;
-      insertBulk: (
-        data: InsertSchemaProps<S[K]["properties"]>[]
-      ) => Promise<any>;
-      count: (options?: {
-        filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
-      }) => Promise<number>;
-    };
+  return {
+    ...(handler as {
+      [K in keyof S]: {
+        insert: (data: InsertSchemaProps<S[K]["properties"]>) => Promise<any>;
+        find: (options?: {
+          filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
+          sort?: string;
+          limit?: number;
+          offset?: number;
+        }) => Promise<any[]>;
+        get: <
+          Select extends SelectFields<InferSchemaProps<S[K]["properties"]>>,
+        >(
+          id: string,
+          options?: { select?: Select }
+        ) => Promise<
+          InferSelected<InferSchemaProps<S[K]["properties"]>, Select>
+        >;
+        update: (
+          id: string,
+          data: Partial<InferSchemaProps<S[K]["properties"]>>
+        ) => Promise<any>;
+        delete: (id: string) => Promise<any>;
+        insertBulk: (
+          data: InsertSchemaProps<S[K]["properties"]>[]
+        ) => Promise<any>;
+        count: (options?: {
+          filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
+        }) => Promise<number>;
+      };
+    }),
+    realtime: createRealtimeMethods(DEFAULT_BASE_URL, opts.apiKey),
   };
 }
 
