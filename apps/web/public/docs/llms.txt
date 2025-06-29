@@ -1,0 +1,94 @@
+# NotDatabase Documentation
+
+## Overview
+NotDatabase is a schema-based key-value database built for TypeScript developers who want structure without the bloat. It stores data as JSON documents under collections with optional schema validation.
+
+## Documentation Structure
+
+### Core Pages
+- `https://notdatabase.com/docs` - Main documentation page explaining what NotDatabase is
+- `https://notdatabase.com/docs/how-it-works` - Technical explanation of how NotDatabase operates
+- `https://notdatabase.com/docs/installation` - Installation instructions for the SDK
+- `https://notdatabase.com/docs/authentication` - API key authentication guide
+
+### Core Concepts
+- `https://notdatabase.com/docs/databases` - Explanation of databases as root containers
+- `https://notdatabase.com/docs/collections` - Schema-based collections with validation
+- `https://notdatabase.com/docs/documents` - Individual data units with metadata
+
+### Database Functions
+- `https://notdatabase.com/docs/create` - insert() and insertBulk() functions
+- `https://notdatabase.com/docs/read` - find() and get() functions with filtering
+- `https://notdatabase.com/docs/update` - update() function for modifying documents
+- `https://notdatabase.com/docs/delete` - delete() function for removing documents
+- `https://notdatabase.com/docs/aggregation` - count() function for basic aggregation
+
+## Key Features
+
+### Type Safety
+- Full TypeScript support with automatic type inference
+- Compile-time safety based on schema definitions
+- No extra tools or configuration needed
+
+### Schema-Based
+- Define data structure once, get automatic validation
+- Required fields and unique constraints
+- Default values and type enforcement
+
+### Simple API
+- No SQL required
+- JavaScript/TypeScript native syntax
+- Automatic metadata (_id, createdAt, updatedAt)
+
+## Technical Architecture
+
+### Client Setup
+```typescript
+import { createClient } from "notdb";
+
+const db = createClient({
+  apiKey: "your_api_key",
+  schema: {
+    users: {
+      properties: {
+        name: { type: "string", required: true },
+        email: { type: "string", required: true, unique: true },
+        age: { type: "number" },
+      },
+    },
+  },
+});
+```
+
+### Core Operations
+- **Create**: `db.users.insert()` and `db.users.insertBulk()`
+- **Read**: `db.users.find()` with filters, sorting, pagination
+- **Update**: `db.users.update(id, changes)`
+- **Delete**: `db.users.delete(id)`
+- **Aggregate**: `db.users.count()`
+
+### Data Storage
+- JSON documents stored in key-value format
+- Schema enforcement on both client and server
+- Automatic metadata injection
+- No migrations required
+
+## Use Cases
+- MVPs and side projects
+- Event logs and audit trails
+- Internal dashboards
+- Small applications tired of complex database setup
+
+
+## Target Audience
+- TypeScript developers
+- Developers building MVPs and side projects
+- Teams wanting simple, structured data storage
+- Developers tired of complex database migrations
+
+## Key Differentiators
+- Schema-based but not schema-less
+- Type-safe without extra tooling
+- Simple API without SQL
+- Automatic validation and constraints
+- Built for modern TypeScript workflows 
