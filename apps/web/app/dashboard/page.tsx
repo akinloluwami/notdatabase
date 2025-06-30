@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, Settings, Database, Loader2, Copy, Check } from "lucide-react";
 import Ttile from "@/components/ttile";
+import { authClient } from "../lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,6 +38,9 @@ export default function DashboardPage() {
   const [createdDatabase, setCreatedDatabase] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const { signOut } = authClient;
 
   const {
     data: databases,
@@ -74,6 +80,11 @@ export default function DashboardPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    router.push("/");
+  };
+
   return (
     <>
       <Ttile>Dashboard - NotDatabase</Ttile>
@@ -103,6 +114,15 @@ export default function DashboardPage() {
               </SidebarMenuItem> */}
             </SidebarMenu>
           </SidebarContent>
+          <SidebarFooter className="mt-auto">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <div className="p-8">
