@@ -4,6 +4,7 @@ import { turso } from "../../lib/turso";
 import { logDbEvent } from "../../lib/log-event";
 import { publishDbEvent } from "../../lib/publish-event";
 import { getDbIdFromApiKey } from "../../lib/auth";
+import { createAutoIndexIfNeeded } from "../../lib/create-auto-index-if-needed";
 
 // POST /api/[collection]/bulk - Insert multiple documents
 export async function POST(
@@ -68,6 +69,9 @@ export async function POST(
             { status: 409 }
           );
         }
+
+        // Trigger auto-indexing for unique constraint fields
+        await createAutoIndexIfNeeded(dbId, collection, field);
       }
     }
 
