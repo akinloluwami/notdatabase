@@ -90,6 +90,6 @@ export async function createAutoIndexIfNeeded(
       `✅ Auto-indexed field '${field}' for '${collection}' (db: ${dbId})`
     );
   } catch (err) {
-    console.error("Auto-indexing failed:", err);
+    console.error("Auto-indexing failed::", err);
   }
 }
