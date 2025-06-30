@@ -5,6 +5,7 @@ import { validateAgainstSchema } from "../../lib/schema";
 import { logDbEvent } from "../../lib/log-event";
 import { publishDbEvent } from "../../lib/publish-event";
 import { getDbIdFromApiKey } from "../../lib/auth";
+import { createAutoIndexIfNeeded } from "../../lib/create-auto-index-if-needed";
 
 // GET /api/[collection]/docs - Get documents from collection
 export async function GET(
@@ -54,6 +55,9 @@ export async function GET(
   for (const [field, value] of filters) {
     sql += ` AND json_extract(value, ?) = ?`;
     args.push(`$.${field}`, value);
+
+    // Trigger auto-indexing for filtered fields
+    await createAutoIndexIfNeeded(dbId, collection, field);
   }
 
   const sort = query.get("sort");
@@ -62,6 +66,9 @@ export async function GET(
     const field = desc ? sort.slice(1) : sort;
     sql += ` ORDER BY json_extract(value, ?) ${desc ? "DESC" : "ASC"}`;
     args.push(`$.${field}`);
+
+    // Trigger auto-indexing for sorted fields
+    await createAutoIndexIfNeeded(dbId, collection, field);
   } else {
     sql += ` ORDER BY created_at DESC`;
   }
@@ -176,6 +183,9 @@ export async function POST(
           { status: 409 }
         );
       }
+
+      // Trigger auto-indexing for unique constraint fields
+      await createAutoIndexIfNeeded(dbId, collection, field);
     }
   }
 
