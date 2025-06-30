@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { turso } from "../../lib/turso";
 import { logDbEvent } from "../../lib/log-event";
 import { getDbIdFromApiKey } from "../../lib/auth";
+import { createAutoIndexIfNeeded } from "../../lib/create-auto-index-if-needed";
 
 // GET /api/[collection]/count - Count documents in collection
 export async function GET(
@@ -48,6 +49,9 @@ export async function GET(
   for (const [field, value] of filters) {
     sql += ` AND json_extract(value, ?) = ?`;
     args.push(`$.${field}`, value);
+
+    // Trigger auto-indexing for filtered fields
+    await createAutoIndexIfNeeded(dbId, collection, field);
   }
 
   try {
