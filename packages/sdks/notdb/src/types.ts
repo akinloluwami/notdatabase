@@ -59,3 +59,13 @@ export type InferSelected<T, S extends SelectFields<T> | undefined> =
         createdAt: string;
         updatedAt: string;
       };
+
+// Helper type for increment/decrement
+export type IncrementDecrement = { increment: number } | { decrement: number };
+
+// For update: allow number | IncrementDecrement for number fields
+export type InferUpdateProps<T extends JSONSchema["properties"]> = {
+  [K in keyof T]?: T[K]["type"] extends "number"
+    ? number | IncrementDecrement
+    : InferFieldType<T[K]>;
+} & Partial<SystemFields>;

@@ -49,6 +49,12 @@ const user = await db.users.get("user_id");
 // Update a user
 await db.users.update("user_id", { age: 31 });
 
+// Increment or decrement numeric fields
+await db.users.update("user_id", {
+  xp: { increment: 100 }, // Increments xp by 100
+  score: { decrement: 50 }, // Decrements score by 50
+});
+
 // Delete a user
 await db.users.delete("user_id");
 ```

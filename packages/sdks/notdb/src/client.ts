@@ -6,6 +6,7 @@ import {
   SelectFields,
   InferSelected,
   InsertSchemaProps,
+  InferUpdateProps,
 } from "./types.js";
 import {
   getRequiredFields,
@@ -76,7 +77,7 @@ export function createClient<S extends SchemaDefinition>(
         >;
         update: (
           id: string,
-          data: Partial<InferSchemaProps<S[K]["properties"]>>
+          data: InferUpdateProps<S[K]["properties"]>
         ) => Promise<any>;
         delete: (id: string) => Promise<any>;
         insertBulk: (

@@ -117,11 +117,28 @@ export async function PATCH(
 
   const existing = JSON.parse(value);
 
-  const updated = {
-    ...existing,
-    ...body,
-    updatedAt: new Date().toISOString(),
-  };
+  // Handle increment/decrement operations
+  const updated = { ...existing };
+  let hasSpecialOp = false;
+  for (const [key, val] of Object.entries(body)) {
+    if (
+      val &&
+      typeof val === "object" &&
+      (Object.prototype.hasOwnProperty.call(val, "increment") ||
+        Object.prototype.hasOwnProperty.call(val, "decrement"))
+    ) {
+      hasSpecialOp = true;
+      const current = typeof updated[key] === "number" ? updated[key] : 0;
+      if (typeof (val as any).increment === "number") {
+        updated[key] = current + (val as any).increment;
+      } else if (typeof (val as any).decrement === "number") {
+        updated[key] = current - (val as any).decrement;
+      }
+    } else {
+      updated[key] = val;
+    }
+  }
+  updated.updatedAt = new Date().toISOString();
 
   await turso.execute({
     sql: `
