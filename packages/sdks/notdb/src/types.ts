@@ -42,8 +42,20 @@ export type InferSchemaProps<T extends JSONSchema["properties"]> = {
   [K in keyof T]: InferFieldType<T[K]>;
 } & SystemFields;
 
+// Helper type to extract required keys from a schema
+export type RequiredKeys<T> = {
+  [K in keyof T]: T[K] extends { required: true } ? K : never;
+}[keyof T];
+
+// Helper type to extract optional keys from a schema
+export type OptionalKeys<T> = Exclude<keyof T, RequiredKeys<T>>;
+
 export type InsertSchemaProps<T extends JSONSchema["properties"]> =
-  InferSchemaProps<T> & { key?: string };
+  // Required fields
+  { [K in RequiredKeys<T>]: InferFieldType<T[K]> } & // Optional fields
+  { [K in OptionalKeys<T>]?: InferFieldType<T[K]> } & {
+    key?: string;
+  } & SystemFields;
 
 export type InferSelected<T, S extends SelectFields<T> | undefined> =
   S extends SelectFields<T>
