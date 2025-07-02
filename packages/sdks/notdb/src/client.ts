@@ -182,15 +182,21 @@ class CollectionClient {
   ): Promise<any> {
     const url = new URL(`${this.baseUrl}/${this.collection}/docs/${id}`);
 
+    let hasSelect = false;
     const selectedFields = new Set<string>();
 
     if (options?.select) {
       for (const [key, value] of Object.entries(options.select)) {
-        if (value) selectedFields.add(key);
+        if (value) {
+          selectedFields.add(key);
+          hasSelect = true;
+        }
       }
     }
 
-    url.searchParams.set("select", Array.from(selectedFields).join(","));
+    if (hasSelect) {
+      url.searchParams.set("select", Array.from(selectedFields).join(","));
+    }
 
     const res = await fetch(url.toString(), {
       headers: {
