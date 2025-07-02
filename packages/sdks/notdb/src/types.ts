@@ -52,8 +52,9 @@ export type OptionalKeys<T> = Exclude<keyof T, RequiredKeys<T>>;
 
 export type InsertSchemaProps<T extends JSONSchema["properties"]> =
   // Required fields
-  { [K in RequiredKeys<T>]: InferFieldType<T[K]> } & // Optional fields
-  { [K in OptionalKeys<T>]?: InferFieldType<T[K]> } & {
+  { [K in RequiredKeys<T>]: InferFieldType<T[K]> } & { // Optional fields
+    [K in OptionalKeys<T>]?: InferFieldType<T[K]>;
+  } & {
     key?: string;
   } & SystemFields;
 
