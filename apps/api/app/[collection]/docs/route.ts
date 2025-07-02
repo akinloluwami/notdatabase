@@ -119,7 +119,7 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { unique, ...data } = body;
+  const { unique, key: providedKey, ...data } = body;
 
   // Schema validation
   const { rows: schemaRows } = await turso.execute({
@@ -150,7 +150,7 @@ export async function POST(
   }
 
   const now = new Date().toISOString();
-  const key = body.key ?? nanoid();
+  const key = providedKey ?? nanoid();
 
   const doc = {
     ...data,
