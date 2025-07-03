@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev-run": "clear && pnpm run build && node dist/index.js"
+    "dev-run": "clear && pnpm run build && node dist/index.js",
+    "publish": "pnpm run build && npm publish"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
