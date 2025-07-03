@@ -7,6 +7,7 @@ import {
   InferSelected,
   InsertSchemaProps,
   InferUpdateProps,
+  InferFilterProps,
 } from "./types.js";
 import {
   getRequiredFields,
@@ -62,7 +63,7 @@ export function createClient<S extends SchemaDefinition>(
       [K in keyof S]: {
         insert: (data: InsertSchemaProps<S[K]["properties"]>) => Promise<any>;
         find: (options?: {
-          filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
+          filter?: InferFilterProps<InferSchemaProps<S[K]["properties"]>>;
           sort?: string;
           limit?: number;
           offset?: number;
@@ -84,7 +85,7 @@ export function createClient<S extends SchemaDefinition>(
           data: InsertSchemaProps<S[K]["properties"]>[]
         ) => Promise<any>;
         count: (options?: {
-          filter?: Partial<InferSchemaProps<S[K]["properties"]>>;
+          filter?: InferFilterProps<InferSchemaProps<S[K]["properties"]>>;
         }) => Promise<number>;
       };
     }),
@@ -92,12 +93,12 @@ export function createClient<S extends SchemaDefinition>(
   };
 }
 
-class CollectionClient {
+class CollectionClient<TSchema extends JSONSchema = JSONSchema> {
   constructor(
     private collection: string,
     private baseUrl: string,
     private apiKey: string,
-    private schema: JSONSchema
+    private schema: TSchema
   ) {}
 
   async insert(data: Record<string, any>) {
@@ -137,7 +138,7 @@ class CollectionClient {
   }
 
   async find(options?: {
-    filter?: Record<string, string | number | boolean>;
+    filter?: InferFilterProps<InferSchemaProps<TSchema["properties"]>>;
     sort?: string;
     limit?: number;
     offset?: number;
@@ -146,7 +147,15 @@ class CollectionClient {
 
     if (options?.filter) {
       for (const [key, value] of Object.entries(options.filter)) {
-        url.searchParams.append(`filter[${key}]`, String(value));
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          // Advanced filter operators
+          for (const [op, opValue] of Object.entries(value)) {
+            url.searchParams.append(`filter[${key}][${op}]`, String(opValue));
+          }
+        } else {
+          // Simple equality
+          url.searchParams.append(`filter[${key}]`, String(value));
+        }
       }
     }
 
@@ -294,7 +303,7 @@ class CollectionClient {
   }
 
   async count(options?: {
-    filter?: Record<string, string | number | boolean>;
+    filter?: InferFilterProps<InferSchemaProps<TSchema["properties"]>>;
   }): Promise<number> {
     const url = new URL(`${this.baseUrl}/${this.collection}/count`);
 
