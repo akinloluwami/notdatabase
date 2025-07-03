@@ -1,5 +1,3 @@
-# notdb-js
-
 A simple JavaScript/TypeScript SDK for interacting with the NotDatabase API. Define your schema and perform CRUD operations with ease.
 
 ## Installation
