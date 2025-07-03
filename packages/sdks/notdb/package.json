@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "dev-run": "clear && pnpm run build && node dist/index.js",
-    "publish": "pnpm run build && npm publish"
+    "publish": "pnpm run build && npm publish --public"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
