@@ -52,7 +52,8 @@ export type OptionalKeys<T> = Exclude<keyof T, RequiredKeys<T>>;
 
 export type InsertSchemaProps<T extends JSONSchema["properties"]> =
   // Required fields
-  { [K in RequiredKeys<T>]: InferFieldType<T[K]> } & { // Optional fields
+  { [K in RequiredKeys<T>]: InferFieldType<T[K]> } & {
+    // Optional fields
     [K in OptionalKeys<T>]?: InferFieldType<T[K]>;
   } & {
     key?: string;
@@ -82,3 +83,21 @@ export type InferUpdateProps<T extends JSONSchema["properties"]> = {
     ? number | IncrementDecrement
     : InferFieldType<T[K]>;
 } & Partial<SystemFields>;
+
+// Typesafe filter operators for number fields
+export type NumberFilterOperators = {
+  gt?: number;
+  gte?: number;
+  lt?: number;
+  lte?: number;
+};
+
+// Typesafe filter for a single field
+export type FieldFilter<T> = T extends number
+  ? number | NumberFilterOperators
+  : T;
+
+// Typesafe filter for a schema
+export type InferFilterProps<T> = {
+  [K in keyof T]?: FieldFilter<T[K]>;
+};
