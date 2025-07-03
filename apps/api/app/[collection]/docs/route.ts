@@ -29,34 +29,50 @@ export async function GET(
   const limit = parseInt(query.get("limit") || "50");
   const offset = parseInt(query.get("offset") || "0");
 
-  const filters: [string, any][] = [];
+  // --- Advanced filter parsing ---
+  // Will collect: [sql, arg, field]
+  const filterClauses: string[] = [];
+  const args: any[] = [dbId, collection];
+  const autoIndexFields: string[] = [];
 
+  // Helper to add filter clause
+  function addFilter(field: string, op: string, value: any) {
+    let sqlOp = "=";
+    if (op === "gt") sqlOp = ">";
+    else if (op === "lt") sqlOp = "<";
+    else if (op === "gte") sqlOp = ">=";
+    else if (op === "lte") sqlOp = "<=";
+    // fallback: equality
+    filterClauses.push(`json_extract(value, ?) ${sqlOp} ?`);
+    args.push(`$.${field}`, value);
+    autoIndexFields.push(field);
+  }
+
+  // Parse all query params
   for (const [key, value] of query.entries()) {
     if (key.startsWith("filter[")) {
-      const field = key.slice(7, -1);
-      let parsed: any = value;
-
-      if (value === "true") parsed = true;
-      else if (value === "false") parsed = false;
-      else if (!isNaN(Number(value))) parsed = Number(value);
-
-      filters.push([field, parsed]);
+      // e.g. filter[xp][gt] or filter[xp]
+      const match = key.match(/^filter\[([^\]]+)\](?:\[([^\]]+)\])?$/);
+      if (match) {
+        const field = match[1];
+        const op = match[2] || "eq";
+        let parsed: any = value;
+        if (value === "true") parsed = true;
+        else if (value === "false") parsed = false;
+        else if (!isNaN(Number(value))) parsed = Number(value);
+        addFilter(field, op, parsed);
+      }
     }
   }
 
-  let sql = `
-    SELECT key, value
-    FROM kv_store
-    WHERE db_id = ? AND collection = ?
-  `;
+  let sql = `\n    SELECT key, value\n    FROM kv_store\n    WHERE db_id = ? AND collection = ?\n  `;
 
-  const args: any[] = [dbId, collection];
+  if (filterClauses.length > 0) {
+    sql += " AND " + filterClauses.join(" AND ");
+  }
 
-  for (const [field, value] of filters) {
-    sql += ` AND json_extract(value, ?) = ?`;
-    args.push(`$.${field}`, value);
-
-    // Trigger auto-indexing for filtered fields
+  // Trigger auto-indexing for filtered fields
+  for (const field of autoIndexFields) {
     await createAutoIndexIfNeeded(dbId, collection, field);
   }
 
@@ -66,8 +82,6 @@ export async function GET(
     const field = desc ? sort.slice(1) : sort;
     sql += ` ORDER BY json_extract(value, ?) ${desc ? "DESC" : "ASC"}`;
     args.push(`$.${field}`);
-
-    // Trigger auto-indexing for sorted fields
     await createAutoIndexIfNeeded(dbId, collection, field);
   } else {
     sql += ` ORDER BY created_at DESC`;
