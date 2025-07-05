@@ -145,8 +145,12 @@ class CollectionClient<TSchema extends JSONSchema = JSONSchema> {
   }): Promise<any[]> {
     const url = new URL(`${this.baseUrl}/${this.collection}/docs`);
 
+    const fieldTypes = this.schema.properties;
+
     if (options?.filter) {
       for (const [key, value] of Object.entries(options.filter)) {
+        const fieldType = fieldTypes[key]?.type ?? "string"; // fallback to string if unknown
+
         if (value && typeof value === "object" && !Array.isArray(value)) {
           // Advanced filter operators
           for (const [op, opValue] of Object.entries(value)) {
@@ -156,6 +160,9 @@ class CollectionClient<TSchema extends JSONSchema = JSONSchema> {
           // Simple equality
           url.searchParams.append(`filter[${key}]`, String(value));
         }
+
+        // Send type hint
+        url.searchParams.append(`type[${key}]`, fieldType);
       }
     }
 
@@ -163,11 +170,11 @@ class CollectionClient<TSchema extends JSONSchema = JSONSchema> {
       url.searchParams.append("sort", options.sort);
     }
 
-    if (options?.limit) {
+    if (options?.limit !== undefined) {
       url.searchParams.append("limit", String(options.limit));
     }
 
-    if (options?.offset) {
+    if (options?.offset !== undefined) {
       url.searchParams.append("offset", String(options.offset));
     }
 
@@ -307,9 +314,24 @@ class CollectionClient<TSchema extends JSONSchema = JSONSchema> {
   }): Promise<number> {
     const url = new URL(`${this.baseUrl}/${this.collection}/count`);
 
+    const fieldTypes = this.schema.properties;
+
     if (options?.filter) {
       for (const [key, value] of Object.entries(options.filter)) {
-        url.searchParams.append(`filter[${key}]`, String(value));
+        const fieldType = fieldTypes[key]?.type ?? "string";
+
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          // Advanced filter operators
+          for (const [op, opValue] of Object.entries(value)) {
+            url.searchParams.append(`filter[${key}][${op}]`, String(opValue));
+          }
+        } else {
+          // Simple equality
+          url.searchParams.append(`filter[${key}]`, String(value));
+        }
+
+        // Send type hint
+        url.searchParams.append(`type[${key}]`, fieldType);
       }
     }
 
