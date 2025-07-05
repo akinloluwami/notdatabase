@@ -23,19 +23,62 @@ export async function GET(
   const url = new URL(request.url);
   const query = url.searchParams;
 
-  const filters: [string, any][] = [];
+  const filters: { field: string; op: string; value: any }[] = [];
+  const typeHints: Record<string, string> = {};
 
+  // Parse type hints
+  for (const [key, value] of query.entries()) {
+    if (key.startsWith("type[")) {
+      const match = key.match(/^type\[([^\]]+)\]$/);
+      if (match) {
+        const field = match[1];
+        typeHints[field] = value;
+      }
+    }
+  }
+
+  // Parse filters
   for (const [key, value] of query.entries()) {
     if (key.startsWith("filter[")) {
-      const field = key.slice(7, -1);
+      const match = key.match(/^filter\[([^\]]+)\](?:\[([^\]]+)\])?$/);
+      if (!match) continue;
+
+      const field = match[1];
+      const op = match[2] || "eq";
+
       let parsed: any = value;
 
-      if (value === "true") parsed = true;
-      else if (value === "false") parsed = false;
-      else if (!isNaN(Number(value))) parsed = Number(value);
+      const hint = typeHints[field];
 
-      filters.push([field, parsed]);
+      if (hint === "boolean") {
+        parsed = value === "true";
+      } else if (hint === "number") {
+        parsed = Number(value);
+      } else if (!hint) {
+        // No hint: fallback to naive parse
+        if (value === "true") parsed = true;
+        else if (value === "false") parsed = false;
+        else if (!isNaN(Number(value))) parsed = Number(value);
+      }
+
+      filters.push({ field, op, value: parsed });
     }
+  }
+
+  const args: any[] = [dbId, collection];
+  const filterClauses: string[] = [];
+
+  for (const { field, op, value } of filters) {
+    let sqlOp = "=";
+    if (op === "gt") sqlOp = ">";
+    else if (op === "lt") sqlOp = "<";
+    else if (op === "gte") sqlOp = ">=";
+    else if (op === "lte") sqlOp = "<=";
+
+    filterClauses.push(`json_extract(value, ?) ${sqlOp} ?`);
+    args.push(`$.${field}`, value);
+
+    await createAutoIndexIfNeeded(dbId, collection, field);
   }
 
   let sql = `
@@ -44,14 +87,8 @@ export async function GET(
     WHERE db_id = ? AND collection = ?
   `;
 
-  const args: any[] = [dbId, collection];
-
-  for (const [field, value] of filters) {
-    sql += ` AND json_extract(value, ?) = ?`;
-    args.push(`$.${field}`, value);
-
-    // Trigger auto-indexing for filtered fields
-    await createAutoIndexIfNeeded(dbId, collection, field);
+  if (filterClauses.length > 0) {
+    sql += " AND " + filterClauses.join(" AND ");
   }
 
   try {
