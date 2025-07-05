@@ -30,10 +30,19 @@ export async function GET(
   const offset = parseInt(query.get("offset") || "0");
 
   // --- Advanced filter parsing ---
-  // Will collect: [sql, arg, field]
   const filterClauses: string[] = [];
   const args: any[] = [dbId, collection];
   const autoIndexFields: string[] = [];
+
+  // Collect type hints from query params
+  const typeHints: Record<string, string> = {};
+  for (const [key, value] of query.entries()) {
+    const match = key.match(/^type\[([^\]]+)\]$/);
+    if (match) {
+      const field = match[1];
+      typeHints[field] = value; // value is like "string", "number", "boolean"
+    }
+  }
 
   // Helper to add filter clause
   function addFilter(field: string, op: string, value: any) {
@@ -42,7 +51,6 @@ export async function GET(
     else if (op === "lt") sqlOp = "<";
     else if (op === "gte") sqlOp = ">=";
     else if (op === "lte") sqlOp = "<=";
-    // fallback: equality
     filterClauses.push(`json_extract(value, ?) ${sqlOp} ?`);
     args.push(`$.${field}`, value);
     autoIndexFields.push(field);
@@ -51,21 +59,33 @@ export async function GET(
   // Parse all query params
   for (const [key, value] of query.entries()) {
     if (key.startsWith("filter[")) {
-      // e.g. filter[xp][gt] or filter[xp]
       const match = key.match(/^filter\[([^\]]+)\](?:\[([^\]]+)\])?$/);
       if (match) {
         const field = match[1];
         const op = match[2] || "eq";
+
+        const declaredType = typeHints[field]; // might be undefined
         let parsed: any = value;
-        if (value === "true") parsed = true;
-        else if (value === "false") parsed = false;
-        else if (!isNaN(Number(value))) parsed = Number(value);
+
+        if (declaredType === "boolean") {
+          parsed = value === "true";
+        } else if (declaredType === "number") {
+          parsed = Number(value);
+        } else if (declaredType === "string") {
+          parsed = value;
+        } else {
+          // Fallback: loose parsing
+          if (value === "true") parsed = true;
+          else if (value === "false") parsed = false;
+          else parsed = value; // Leave everything else as string by default
+        }
+
         addFilter(field, op, parsed);
       }
     }
   }
 
-  let sql = `\n    SELECT key, value\n    FROM kv_store\n    WHERE db_id = ? AND collection = ?\n  `;
+  let sql = `SELECT key, value FROM kv_store WHERE db_id = ? AND collection = ?`;
 
   if (filterClauses.length > 0) {
     sql += " AND " + filterClauses.join(" AND ");
