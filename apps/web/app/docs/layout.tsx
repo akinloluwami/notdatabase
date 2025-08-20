@@ -48,7 +48,6 @@ export default function RootLayout({
         </div>
         <div className="w-full">
           {children}
-          <DocsContainer currentPath={usePathname()}>{null}</DocsContainer>
         </div>
       </div>
     </div>
