@@ -1,11 +1,11 @@
 {
   "name": "api-v2",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "migrate": "tsx scripts/migrate-from-turso.ts"
   },
   "dependencies": {
