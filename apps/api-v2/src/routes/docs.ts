@@ -108,7 +108,12 @@ docsRoutes.get("/", async (c) => {
     args.push(limit, offset);
 
     const rows = await sql.unsafe(baseQuery, args);
-    const docs = rows.map((row: any) => row.value);
+    const docs = rows.map((row: any) => {
+      if (typeof row.value === "string") {
+        return JSON.parse(row.value);
+      }
+      return row.value;
+    });
 
     await logDbEvent({
       dbId,
@@ -143,7 +148,9 @@ docsRoutes.get("/:id", async (c) => {
     return c.json({ error: "Document not found" }, 404);
   }
 
-  const doc = rows[0].value as Record<string, any>;
+  const rawValue = rows[0].value;
+  const doc: Record<string, any> =
+    typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
 
   if (selectedFields && selectedFields.length > 0) {
     const selectedDoc: Record<string, any> = {};
@@ -278,7 +285,9 @@ docsRoutes.patch("/:id", async (c) => {
     return c.json({ error: "Document not found" }, 404);
   }
 
-  const existing = rows[0].value as Record<string, any>;
+  const rawExisting = rows[0].value;
+  const existing: Record<string, any> =
+    typeof rawExisting === "string" ? JSON.parse(rawExisting) : rawExisting;
 
   // Handle increment/decrement operations
   const updated = { ...existing };
@@ -341,7 +350,11 @@ docsRoutes.delete("/:id", async (c) => {
     return c.json({ error: "Document not found" }, 404);
   }
 
-  const deletedDoc = rows[0].value;
+  const rawDeletedDoc = rows[0].value;
+  const deletedDoc =
+    typeof rawDeletedDoc === "string"
+      ? JSON.parse(rawDeletedDoc)
+      : rawDeletedDoc;
 
   const result = await sql`
     DELETE FROM kv_store
