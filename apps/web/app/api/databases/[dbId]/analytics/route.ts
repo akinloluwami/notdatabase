@@ -4,7 +4,7 @@ import { sql } from "@/app/lib/server/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ dbId: string }> }
+  { params }: { params: Promise<{ dbId: string }> },
 ) {
   try {
     const session = await auth.api.getSession({
@@ -80,7 +80,8 @@ export async function GET(
     });
 
     // Get timeseries data using PostgreSQL date formatting
-    const timeseriesResult = await sql.unsafe(`
+    const timeseriesResult = await sql.unsafe(
+      `
       SELECT 
         TO_CHAR(created_at, '${groupByFormat}') as time_bucket,
         action,
@@ -89,7 +90,9 @@ export async function GET(
       WHERE db_id = $1 AND created_at >= $2
       GROUP BY TO_CHAR(created_at, '${groupByFormat}'), action
       ORDER BY time_bucket ASC
-    `, [dbId, startDateStr]);
+    `,
+      [dbId, startDateStr],
+    );
 
     // Process timeseries data
     const timeseries: Record<
@@ -125,7 +128,7 @@ export async function GET(
 
     // Convert to array and fill missing time buckets
     const timeseriesArray = Object.values(timeseries).sort(
-      (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime()
+      (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
     );
 
     return NextResponse.json({
@@ -138,7 +141,7 @@ export async function GET(
     console.error("Error fetching analytics:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

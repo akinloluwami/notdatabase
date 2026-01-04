@@ -4,7 +4,7 @@ import { sql } from "@/app/lib/server/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ dbId: string; collectionName: string }> }
+  { params }: { params: Promise<{ dbId: string; collectionName: string }> },
 ) {
   try {
     const session = await auth.api.getSession({
@@ -60,7 +60,9 @@ export async function GET(
       }
 
       const rows = await sql.unsafe(queryStr, args as (string | number)[]);
-      return NextResponse.json({ count: Number((rows[0] as unknown as { count: number }).count) });
+      return NextResponse.json({
+        count: Number((rows[0] as unknown as { count: number }).count),
+      });
     }
 
     // Simple query without filters
@@ -75,7 +77,7 @@ export async function GET(
     console.error("Error fetching count:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
