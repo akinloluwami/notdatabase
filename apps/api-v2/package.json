@@ -1,11 +1,11 @@
 {
   "name": "api-v2",
   "type": "module",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/src/index.js",
+    "build": "tsup src/index.ts --format esm --clean",
+    "start": "node dist/index.js",
     "migrate": "tsx scripts/migrate-from-turso.ts"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.11.17",
+    "tsup": "^8.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
   }
