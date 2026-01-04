@@ -1,6 +1,7 @@
 {
   "name": "api-v2",
   "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
