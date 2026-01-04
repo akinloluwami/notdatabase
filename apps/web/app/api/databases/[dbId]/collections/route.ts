@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
-import { turso } from "@/app/lib/server/turso";
+import { sql } from "@/app/lib/server/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ dbId: string }> }
+  { params }: { params: Promise<{ dbId: string }> },
 ) {
   try {
     const session = await auth.api.getSession({
@@ -17,30 +17,25 @@ export async function GET(
 
     const { dbId } = await params;
 
-    const ownedResult = await turso.execute({
-      sql: `SELECT 1 FROM databases WHERE id = ? AND owner_id = ?`,
-      args: [dbId, session.user.id],
-    });
-    const owned = ownedResult.rows[0];
+    const owned = await sql`
+      SELECT 1 FROM databases WHERE id = ${dbId} AND user_id = ${session.user.id}
+    `;
 
-    if (!owned) {
+    if (owned.length === 0) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const collectionsResult = await turso.execute({
-      sql: `SELECT DISTINCT collection FROM kv_store WHERE db_id = ?`,
-      args: [dbId],
-    });
-    const collections = collectionsResult.rows.map(
-      (r) => r["collection"] as string
-    );
+    const collectionsResult = await sql`
+      SELECT DISTINCT collection FROM kv_store WHERE db_id = ${dbId}
+    `;
+    const collections = collectionsResult.map((r) => r.collection as string);
 
     return NextResponse.json(collections);
   } catch (error) {
     console.error("Error fetching collections:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

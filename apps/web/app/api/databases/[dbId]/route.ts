@@ -1,10 +1,10 @@
 import { auth } from "@/app/lib/server/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { turso } from "@/app/lib/server/turso";
+import { sql } from "@/app/lib/server/db";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ dbId: string }> }
+  { params }: { params: Promise<{ dbId: string }> },
 ) {
   try {
     const session = await auth.api.getSession({
@@ -17,27 +17,24 @@ export async function DELETE(
 
     const { dbId } = await params;
 
-    const ownedResult = await turso.execute({
-      sql: `SELECT 1 FROM databases WHERE id = ? AND owner_id = ? AND deleted_at IS NULL`,
-      args: [dbId, session.user.id],
-    });
-    const owned = ownedResult.rows[0];
+    const owned = await sql`
+      SELECT 1 FROM databases WHERE id = ${dbId} AND user_id = ${session.user.id} AND deleted_at IS NULL
+    `;
 
-    if (!owned) {
+    if (owned.length === 0) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    await turso.execute({
-      sql: `UPDATE databases SET deleted_at = ? WHERE id = ?`,
-      args: [new Date().toISOString(), dbId],
-    });
+    await sql`
+      UPDATE databases SET deleted_at = ${new Date().toISOString()} WHERE id = ${dbId}
+    `;
 
     return NextResponse.json({ message: "Database deleted successfully" });
   } catch (error) {
     console.error("Error deleting database:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

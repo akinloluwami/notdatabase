@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
-import { turso } from "@/app/lib/server/turso";
+import { sql } from "@/app/lib/server/db";
 
 export async function GET(
   req: NextRequest,
@@ -20,59 +20,49 @@ export async function GET(
     const timeFrame = searchParams.get("timeFrame") || "24h";
 
     // Check if user owns the database
-    const ownedResult = await turso.execute({
-      sql: `SELECT 1 FROM databases WHERE id = ? AND owner_id = ?`,
-      args: [dbId, session.user.id],
-    });
-    const owned = ownedResult.rows[0];
+    const owned = await sql`
+      SELECT 1 FROM databases WHERE id = ${dbId} AND user_id = ${session.user.id}
+    `;
 
-    if (!owned) {
+    if (owned.length === 0) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     // Calculate time range based on timeFrame
     const now = new Date();
     let startDate: Date;
-    let groupBy: string;
-    let dateFormat: string;
+    let groupByFormat: string;
 
     switch (timeFrame) {
       case "3d":
         startDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-        groupBy = "DATE(created_at)";
-        dateFormat = "%Y-%m-%d";
+        groupByFormat = "YYYY-MM-DD";
         break;
       case "7d":
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        groupBy = "DATE(created_at)";
-        dateFormat = "%Y-%m-%d";
+        groupByFormat = "YYYY-MM-DD";
         break;
       default: // 24h
         startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        groupBy = "strftime('%Y-%m-%d %H:00:00', created_at)";
-        dateFormat = "%Y-%m-%d %H:00:00";
+        groupByFormat = "YYYY-MM-DD HH24:00:00";
         break;
     }
 
     const startDateStr = startDate.toISOString();
 
     // Get total events count
-    const totalResult = await turso.execute({
-      sql: `SELECT COUNT(*) as total FROM db_events WHERE db_id = ? AND created_at >= ?`,
-      args: [dbId, startDateStr],
-    });
-    const total = totalResult.rows[0].total as number;
+    const totalResult = await sql`
+      SELECT COUNT(*) as total FROM db_events WHERE db_id = ${dbId} AND created_at >= ${startDateStr}
+    `;
+    const total = Number(totalResult[0].total);
 
     // Get events by action type
-    const actionResult = await turso.execute({
-      sql: `
-        SELECT action, COUNT(*) as count 
-        FROM db_events 
-        WHERE db_id = ? AND created_at >= ?
-        GROUP BY action
-      `,
-      args: [dbId, startDateStr],
-    });
+    const actionResult = await sql`
+      SELECT action, COUNT(*) as count 
+      FROM db_events 
+      WHERE db_id = ${dbId} AND created_at >= ${startDateStr}
+      GROUP BY action
+    `;
 
     const actionCounts = {
       CREATE: 0,
@@ -81,28 +71,25 @@ export async function GET(
       DELETE: 0,
     };
 
-    actionResult.rows.forEach((row: any) => {
+    actionResult.forEach((row) => {
       const action = row.action as string;
-      const count = row.count as number;
+      const count = Number(row.count);
       if (action in actionCounts) {
         actionCounts[action as keyof typeof actionCounts] = count;
       }
     });
 
-    // Get timeseries data
-    const timeseriesResult = await turso.execute({
-      sql: `
-        SELECT 
-          ${groupBy} as time_bucket,
-          action,
-          COUNT(*) as count
-        FROM db_events 
-        WHERE db_id = ? AND created_at >= ?
-        GROUP BY ${groupBy}, action
-        ORDER BY time_bucket ASC
-      `,
-      args: [dbId, startDateStr],
-    });
+    // Get timeseries data using PostgreSQL date formatting
+    const timeseriesResult = await sql.unsafe(`
+      SELECT 
+        TO_CHAR(created_at, '${groupByFormat}') as time_bucket,
+        action,
+        COUNT(*) as count
+      FROM db_events 
+      WHERE db_id = $1 AND created_at >= $2
+      GROUP BY TO_CHAR(created_at, '${groupByFormat}'), action
+      ORDER BY time_bucket ASC
+    `, [dbId, startDateStr]);
 
     // Process timeseries data
     const timeseries: Record<
@@ -116,10 +103,10 @@ export async function GET(
       }
     > = {};
 
-    timeseriesResult.rows.forEach((row: any) => {
+    timeseriesResult.forEach((row) => {
       const timeBucket = row.time_bucket as string;
       const action = row.action as string;
-      const count = row.count as number;
+      const count = Number(row.count);
 
       if (!timeseries[timeBucket]) {
         timeseries[timeBucket] = {
@@ -132,7 +119,7 @@ export async function GET(
       }
 
       if (action in timeseries[timeBucket]) {
-        (timeseries[timeBucket] as any)[action] = count;
+        (timeseries[timeBucket] as Record<string, unknown>)[action] = count;
       }
     });
 

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
-import { turso } from "@/app/lib/server/turso";
+import { sql } from "@/app/lib/server/db";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ dbId: string; keyId: string }> }
+  { params }: { params: Promise<{ dbId: string; keyId: string }> },
 ) {
   try {
     const session = await auth.api.getSession({
@@ -18,39 +18,34 @@ export async function DELETE(
     const { dbId, keyId } = await params;
 
     // Check if user owns the database
-    const ownedResult = await turso.execute({
-      sql: `SELECT 1 FROM databases WHERE id = ? AND owner_id = ?`,
-      args: [dbId, session.user.id],
-    });
-    const owned = ownedResult.rows[0];
+    const owned = await sql`
+      SELECT 1 FROM databases WHERE id = ${dbId} AND user_id = ${session.user.id}
+    `;
 
-    if (!owned) {
+    if (owned.length === 0) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     // Check if the API key exists and belongs to this database
-    const keyResult = await turso.execute({
-      sql: `SELECT 1 FROM api_keys WHERE id = ? AND db_id = ? AND user_id = ?`,
-      args: [keyId, dbId, session.user.id],
-    });
-    const key = keyResult.rows[0];
+    const key = await sql`
+      SELECT 1 FROM api_keys WHERE id = ${keyId} AND db_id = ${dbId} AND user_id = ${session.user.id}
+    `;
 
-    if (!key) {
+    if (key.length === 0) {
       return NextResponse.json({ error: "API key not found" }, { status: 404 });
     }
 
     // Revoke the API key (soft delete)
-    await turso.execute({
-      sql: `UPDATE api_keys SET revoked = 1 WHERE id = ?`,
-      args: [keyId],
-    });
+    await sql`
+      UPDATE api_keys SET revoked = 1 WHERE id = ${keyId}
+    `;
 
     return NextResponse.json({ message: "API key revoked successfully" });
   } catch (error) {
     console.error("Error revoking API key:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
-import { turso } from "@/app/lib/server/turso";
+import { sql } from "@/app/lib/server/db";
 
 export async function GET(
   req: NextRequest,
@@ -18,24 +18,22 @@ export async function GET(
     const { dbId, collectionName } = await params;
 
     // Check if user owns the database
-    const ownedResult = await turso.execute({
-      sql: `SELECT 1 FROM databases WHERE id = ? AND owner_id = ?`,
-      args: [dbId, session.user.id],
-    });
-    const owned = ownedResult.rows[0];
+    const owned = await sql`
+      SELECT 1 FROM databases WHERE id = ${dbId} AND user_id = ${session.user.id}
+    `;
 
-    if (!owned) {
+    if (owned.length === 0) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     const { searchParams } = new URL(req.url);
 
     // Build filters
-    const filters: [string, any][] = [];
+    const filters: [string, unknown][] = [];
     for (const [key, value] of searchParams.entries()) {
       if (key.startsWith("filter[")) {
         const field = key.slice(7, -1);
-        let parsed: any = value;
+        let parsed: unknown = value;
 
         if (value === "true") parsed = true;
         else if (value === "false") parsed = false;
@@ -45,21 +43,34 @@ export async function GET(
       }
     }
 
-    let sql = `
-      SELECT COUNT(*) as count
-      FROM kv_store
-      WHERE db_id = ? AND collection = ?
-    `;
+    if (filters.length > 0) {
+      // Use unsafe for dynamic query building
+      let queryStr = `
+        SELECT COUNT(*) as count
+        FROM kv_store
+        WHERE db_id = $1 AND collection = $2
+      `;
+      const args: (string | number)[] = [dbId, collectionName];
+      let argIndex = 3;
 
-    const args: any[] = [dbId, collectionName];
+      for (const [field, value] of filters) {
+        queryStr += ` AND value->>'${field}' = $${argIndex}`;
+        args.push(String(value));
+        argIndex++;
+      }
 
-    for (const [field, value] of filters) {
-      sql += ` AND json_extract(value, ?) = ?`;
-      args.push(`$.${field}`, value);
+      const rows = await sql.unsafe(queryStr, args as (string | number)[]);
+      return NextResponse.json({ count: Number((rows[0] as unknown as { count: number }).count) });
     }
 
-    const { rows } = await turso.execute({ sql, args });
-    return NextResponse.json({ count: rows[0].count });
+    // Simple query without filters
+    const rows = await sql`
+      SELECT COUNT(*) as count
+      FROM kv_store
+      WHERE db_id = ${dbId} AND collection = ${collectionName}
+    `;
+
+    return NextResponse.json({ count: Number(rows[0].count) });
   } catch (error) {
     console.error("Error fetching count:", error);
     return NextResponse.json(

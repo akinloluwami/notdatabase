@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
-import { turso } from "@/app/lib/server/turso";
+import { sql } from "@/app/lib/server/db";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ dbId: string }> }
+  { params }: { params: Promise<{ dbId: string }> },
 ) {
   try {
     const session = await auth.api.getSession({
@@ -17,37 +17,29 @@ export async function GET(
 
     const { dbId } = await params;
 
-    // Query the database meta
-    const dbResult = await turso.execute({
-      sql: `SELECT id, name, created_at FROM databases WHERE id = ? AND owner_id = ?`,
-      args: [dbId, session.user.id],
-    });
-    const dbRow = dbResult.rows[0];
-    const database = dbRow
-      ? {
-          id: dbRow["id"] as string,
-          name: dbRow["name"] as string,
-          createdAt: dbRow["created_at"] as string,
-        }
-      : undefined;
+    const rows = await sql`
+      SELECT id, name, created_at FROM databases WHERE id = ${dbId} AND user_id = ${session.user.id}
+    `;
 
-    if (!database) {
+    if (rows.length === 0) {
       return NextResponse.json(
         { error: "Database not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
+    const dbRow = rows[0];
+
     return NextResponse.json({
-      id: database.id,
-      name: database.name,
-      createdAt: database.createdAt,
+      id: dbRow.id as string,
+      name: dbRow.name as string,
+      createdAt: dbRow.created_at as string,
     });
   } catch (error) {
     console.error("Error fetching database meta:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
