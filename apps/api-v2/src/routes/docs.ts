@@ -7,26 +7,6 @@ import { logDbEvent } from "../lib/log-event.js";
 import { publishDbEvent } from "../lib/publish-event.js";
 import { createAutoIndexIfNeeded } from "../lib/create-auto-index-if-needed.js";
 
-// Helper to parse stringified JSON fields in a document
-function parseNestedJson(doc: Record<string, any>): Record<string, any> {
-  const result: Record<string, any> = {};
-  for (const [key, value] of Object.entries(doc)) {
-    if (
-      typeof value === "string" &&
-      (value.startsWith("{") || value.startsWith("["))
-    ) {
-      try {
-        result[key] = JSON.parse(value);
-      } catch {
-        result[key] = value;
-      }
-    } else {
-      result[key] = value;
-    }
-  }
-  return result;
-}
-
 export const docsRoutes = new Hono<{
   Variables: { dbId: string; collection: string };
 }>();
@@ -128,11 +108,9 @@ docsRoutes.get("/", async (c) => {
     args.push(limit, offset);
 
     const rows = await sql.unsafe(baseQuery, args);
-    const docs = rows.map((row: any) => {
-      const doc =
-        typeof row.value === "string" ? JSON.parse(row.value) : row.value;
-      return parseNestedJson(doc);
-    });
+    const docs = rows.map((row: any) =>
+      typeof row.value === "string" ? JSON.parse(row.value) : row.value,
+    );
 
     await logDbEvent({
       dbId,
@@ -168,9 +146,8 @@ docsRoutes.get("/:id", async (c) => {
   }
 
   const rawValue = rows[0].value;
-  const doc: Record<string, any> = parseNestedJson(
-    typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue,
-  );
+  const doc: Record<string, any> =
+    typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
 
   if (selectedFields && selectedFields.length > 0) {
     const selectedDoc: Record<string, any> = {};
