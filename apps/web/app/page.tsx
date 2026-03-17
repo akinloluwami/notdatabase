@@ -8,8 +8,7 @@ import Cube3D from "@/components/cube-3d";
 import { useState, useEffect } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { authClient } from "./lib/auth-client";
-import { Button } from "@/components/ui/button";
+import Navbar from "@/components/navbar";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState(0);
@@ -77,56 +76,11 @@ const db = createClient({
 }
 });`;
 
-  const [session, setSession] = useState<{} | null>(null);
-  useEffect(() => {
-    (async () => {
-      const { data } = await authClient.getSession();
-      setSession(data);
-    })();
-  }, []);
-
   return (
     <>
       <Ttile>NotDatabase</Ttile>
-
-      <div className="flex justify-between max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-1">
-          <img src="/logo.png" className="w-6" />
-          <p className="font-semibold">NotDatabase</p>
-        </div>
-        <div className="text-sm text-gray-500 flex items-center gap-2">
-          <Link href="/docs" className="hover:text-white">
-            Documentation
-          </Link>
-          <span className="mx-2">|</span>
-          <>
-            {session ? (
-              <Link href="/dashboard">
-                <Button size="sm" className="">
-                  Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <>
-                <Link href="/login" className="hover:text-white">
-                  Login
-                </Link>
-                <Link href="/signup" className="hover:text-white">
-                  Signup
-                </Link>
-              </>
-            )}
-          </>
-          <span className="mx-2">|</span>
-          <Link
-            href="https://github.com/akinloluwami/notdatabase"
-            className="p-1 hover:bg-white/10 rounded-sm transition-colors"
-            target="_blank"
-          >
-            <SiGithub size={20} />
-          </Link>
-        </div>
-      </div>
+      <Navbar />
+      <div className="pt-16" />
 
       <div className="p-5">
         <div className="max-w-7xl mx-auto py-8 border border-gray-200/5 rounded-2xl flex justify-center items-center relative">
