@@ -130,7 +130,7 @@ export default function DatabaseLayout({
 
   return (
     <div className="min-h-[100dvh] flex">
-      <aside className="w-60 shrink-0 border-r border-white/[0.06] flex flex-col sticky top-0 h-[100dvh] overflow-y-auto">
+      <aside className="w-68 shrink-0 border-r border-white/[0.06] flex flex-col sticky top-0 h-[100dvh] overflow-y-auto">
         <div className="px-4 py-4 border-b border-white/[0.06]">
           <Link
             href="/dashboard"
@@ -229,7 +229,7 @@ export default function DatabaseLayout({
         </nav>
       </aside>
 
-      <main className="flex-1 min-w-0">{children}</main>
+      <main className="flex-1 max-w-7xl mx-auto">{children}</main>
 
       <Dialog
         open={showCreateCollection}
