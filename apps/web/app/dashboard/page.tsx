@@ -4,17 +4,6 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../lib/api-client";
 import Link from "next/link";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,9 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, Settings, Database, Loader2, Copy, Check } from "lucide-react";
+import {
+  Database,
+  Loader2,
+  Copy,
+  Check,
+  Plus,
+  LogOut,
+  Search,
+  ArrowRight,
+} from "lucide-react";
 import Ttile from "@/components/ttile";
 import { authClient } from "../lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -37,6 +35,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [createdDatabase, setCreatedDatabase] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -85,217 +84,229 @@ export default function DashboardPage() {
     router.push("/");
   };
 
+  const filteredDatabases = databases?.filter((db: any) =>
+    db.name.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <>
       <Ttile>Dashboard - NotDatabase</Ttile>
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarHeader className="flex flex-row items-center">
-            <img src="/logo.png" className="w-8" />
-            <p className="text-lg font-semibold">NotDatabase</p>
-          </SidebarHeader>
-          <SidebarContent className="p-2">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive>
-                  <Link href="/dashboard">
-                    <Home className="h-4 w-4" />
-                    Databases
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              {/* <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/dashboard/settings">
-                    <Settings className="h-4 w-4" />
-                    Settings
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem> */}
-            </SidebarMenu>
-          </SidebarContent>
-          <SidebarFooter className="mt-auto">
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
+      <div className="min-h-[100dvh]">
+        <nav className="border-b border-white/[0.06]">
+          <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/logo.png" className="w-7 h-7" alt="NotDatabase" />
+              <span className="font-semibold text-[15px] tracking-tight text-white">
+                NotDatabase
+              </span>
+            </Link>
+            <button
               onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors"
             >
-              Logout
-            </Button>
-          </SidebarFooter>
-        </Sidebar>
-        <SidebarInset>
-          <div className="p-8">
-            <header className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold">Databases</h1>
-              <div className="flex items-center space-x-4">
-                <Input placeholder="Search databases" className="w-64" />
+              <LogOut className="h-4 w-4" />
+              Log out
+            </button>
+          </div>
+        </nav>
+
+        <div className="max-w-6xl mx-auto px-5 py-10">
+          <header className="mb-10">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold tracking-tight">Databases</h1>
+              <Button
+                onClick={() => {
+                  setIsModalOpen(true);
+                  setError(null);
+                  setDbName("");
+                }}
+                className="rounded-lg"
+              >
+                <Plus className="h-4 w-4" />
+                New database
+              </Button>
+            </div>
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search databases..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 bg-white/[0.03] border-white/[0.08] focus:border-white/[0.15] rounded-lg"
+              />
+            </div>
+          </header>
+
+          <main>
+            {isDbLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+              </div>
+            ) : isDbError ? (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                <p className="text-sm text-red-400">
+                  {(dbError as Error).message}
+                </p>
+              </div>
+            ) : filteredDatabases && filteredDatabases.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredDatabases.map((db: any) => (
+                  <Link
+                    key={db.id}
+                    href={`/dashboard/databases/${db.id}`}
+                    className="group rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all duration-200 hover:border-white/[0.12] hover:bg-white/[0.04]"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-9 h-9 rounded-lg bg-white/[0.06] flex items-center justify-center">
+                        <Database className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 mt-1" />
+                    </div>
+                    <h3 className="font-semibold text-white mb-1 group-hover:text-white/90">
+                      {db.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {db.collectionCount || 0} collections
+                      <span className="mx-1.5 text-gray-700">&middot;</span>
+                      {db.documentCount || 0} documents
+                    </p>
+                    <div className="mt-4 flex items-center gap-1 text-xs text-gray-500 group-hover:text-gray-400 transition-colors">
+                      Open
+                      <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : databases && databases.length > 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-500 text-sm">
+                  No databases match &ldquo;{search}&rdquo;
+                </p>
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+                  <Database className="h-5 w-5 text-gray-500" />
+                </div>
+                <h3 className="font-medium text-white mb-1">
+                  No databases yet
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Create your first database to get started.
+                </p>
                 <Button
                   onClick={() => {
                     setIsModalOpen(true);
                     setError(null);
                     setDbName("");
                   }}
+                  className="rounded-lg"
                 >
+                  <Plus className="h-4 w-4" />
                   New database
                 </Button>
               </div>
-            </header>
-            <main>
-              {isDbLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-400">Loading databases...</p>
-                  </div>
+            )}
+          </main>
+        </div>
+
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create database</DialogTitle>
+              <DialogDescription>
+                Give your new database a name.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateDatabase}>
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
+                  {error}
                 </div>
-              ) : isDbError ? (
-                <p className="text-red-400">{(dbError as Error).message}</p>
-              ) : databases && databases.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {databases.map((db: any) => (
-                    <Card key={db.id}>
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <Link
-                            href={`/dashboard/databases/${db.id}`}
-                            className="flex items-center"
-                          >
-                            {db.name}
-                            <span className="ml-2 h-2 w-2 rounded-full bg-green-500"></span>
-                          </Link>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center text-sm text-gray-400">
-                          <Database className="h-4 w-4 mr-2" />
-                          {db.collectionCount || 0} collections,{" "}
-                          {db.documentCount || 0} documents
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p>Your databases will be listed here.</p>
               )}
-            </main>
-          </div>
-
-          {/* Create Database Modal */}
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Database</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreateDatabase} className="space-y-4 py-4">
-                {error && (
-                  <div className="p-3 bg-red-900 border border-red-700 rounded-md text-red-200 text-sm">
-                    {error}
-                  </div>
-                )}
-                <div>
-                  <label
-                    htmlFor="dbName"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Database Name
-                  </label>
-                  <Input
-                    id="dbName"
-                    value={dbName}
-                    onChange={(e) => setDbName(e.target.value)}
-                    placeholder="Enter database name"
-                    disabled={createDatabaseMutation.isPending}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsModalOpen(false)}
-                    disabled={createDatabaseMutation.isPending}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createDatabaseMutation.isPending}
-                  >
-                    {createDatabaseMutation.isPending
-                      ? "Creating..."
-                      : "Create"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-
-          {/* API Key Modal */}
-          <Dialog open={isApiKeyModalOpen} onOpenChange={setIsApiKeyModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Database Created Successfully!</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="p-4 bg-green-900/20 border border-green-700 rounded-md">
-                  <p className="text-green-200 text-sm mb-2">
-                    Your database "{createdDatabase?.name}" has been created
-                    successfully.
-                  </p>
-                  <p className="text-green-200 text-sm">Here's your API key.</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    API Key
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      value={createdDatabase?.apiKey || ""}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyApiKey}
-                      className="flex-shrink-0"
-                    >
-                      {copied ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  {copied && (
-                    <p className="text-green-400 text-xs mt-1">
-                      Copied to clipboard!
-                    </p>
-                  )}
-                </div>
-
-                <div className="bg-yellow-900/20 border border-yellow-700 rounded-md p-3">
-                  <p className="text-yellow-200 text-xs">
-                    ⚠️ Keep this API key secure. You can manage your API keys in
-                    the database settings.
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
+              <Input
+                value={dbName}
+                onChange={(e) => setDbName(e.target.value)}
+                placeholder="my-database"
+                disabled={createDatabaseMutation.isPending}
+                className="bg-white/[0.03] border-white/[0.08] focus:border-white/[0.15]"
+                autoFocus
+              />
+              <DialogFooter className="mt-6">
                 <Button
-                  onClick={() => setIsApiKeyModalOpen(false)}
-                  className="w-full"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={createDatabaseMutation.isPending}
                 >
-                  Got it!
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    !dbName.trim() || createDatabaseMutation.isPending
+                  }
+                >
+                  {createDatabaseMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Create"
+                  )}
                 </Button>
               </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </SidebarInset>
-      </SidebarProvider>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isApiKeyModalOpen} onOpenChange={setIsApiKeyModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Database created</DialogTitle>
+              <DialogDescription>
+                Your database &ldquo;{createdDatabase?.name}&rdquo; is ready.
+                Copy your API key — you won&apos;t see it again.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={createdDatabase?.apiKey || ""}
+                  readOnly
+                  className="font-mono text-sm bg-white/[0.03] border-white/[0.08]"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyApiKey}
+                  className="shrink-0"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-emerald-400" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
+                <p className="text-amber-300 text-xs leading-relaxed">
+                  Store this key somewhere safe. You can manage API keys later
+                  in database settings.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => setIsApiKeyModalOpen(false)}
+                className="w-full"
+              >
+                Done
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </>
   );
 }
