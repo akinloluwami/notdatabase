@@ -4,7 +4,6 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/app/lib/api-client";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -21,19 +20,12 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { Activity, Plus, Eye, Edit, Trash2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Ttile from "@/components/ttile";
-import {
-  addDays,
-  addHours,
-  format,
-  subDays,
-  subHours,
-  isSameDay,
-  isSameHour,
-} from "date-fns";
+import { format, subDays, subHours } from "date-fns";
 // @ts-expect-error: No types for chartjs-plugin-crosshair
 import CrosshairPlugin from "chartjs-plugin-crosshair";
 
@@ -45,8 +37,16 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
+  Filler,
   CrosshairPlugin
 );
+
+const statCards = [
+  { key: "CREATE", label: "Create", color: "#10b981", dot: "bg-emerald-500" },
+  { key: "READ", label: "Read", color: "#3b82f6", dot: "bg-blue-500" },
+  { key: "UPDATE", label: "Update", color: "#f59e0b", dot: "bg-amber-500" },
+  { key: "DELETE", label: "Delete", color: "#ef4444", dot: "bg-red-500" },
+];
 
 export default function DatabasePage() {
   const { dbId } = useParams();
@@ -78,73 +78,39 @@ export default function DatabasePage() {
     return (
       <>
         <Ttile>Loading Database - NotDatabase</Ttile>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-400">Loading database...</p>
-          </div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
         </div>
       </>
     );
+
   if (isError || isErrorAnalytics)
     return (
       <>
         <Ttile>Error - NotDatabase</Ttile>
-        <div className="p-8 text-red-400">
-          {((error || analyticsError) as Error).message}
+        <div className="p-8">
+          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+            <p className="text-sm text-red-400">
+              {((error || analyticsError) as Error).message}
+            </p>
+          </div>
         </div>
       </>
     );
 
-  const chartConfig = {
-    CREATE: {
-      label: "CREATE",
-      color: "#10b981",
-    },
-    READ: {
-      label: "READ",
-      color: "#3b82f6",
-    },
-    UPDATE: {
-      label: "UPDATE",
-      color: "#f59e0b",
-    },
-    DELETE: {
-      label: "DELETE",
-      color: "#ef4444",
-    },
-  };
-
-  const formatTimeLabel = (time: string) => {
-    if (timeFrame === "24h") {
-      return new Date(time).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-    return new Date(time).toLocaleDateString([], {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  // Helper to generate time buckets for the selected timeFrame
   const generateTimeBuckets = () => {
     const now = new Date();
     if (timeFrame === "24h") {
-      // Last 24 hours, hourly buckets
       return Array.from({ length: 24 }, (_, i) => {
         const d = subHours(now, 23 - i);
         return format(d, "yyyy-MM-dd HH:00");
       });
     } else if (timeFrame === "3d") {
-      // Last 3 days, daily buckets
       return Array.from({ length: 3 }, (_, i) => {
         const d = subDays(now, 2 - i);
         return format(d, "yyyy-MM-dd");
       });
     } else if (timeFrame === "7d") {
-      // Last 7 days, daily buckets
       return Array.from({ length: 7 }, (_, i) => {
         const d = subDays(now, 6 - i);
         return format(d, "yyyy-MM-dd");
@@ -153,21 +119,19 @@ export default function DatabasePage() {
     return [];
   };
 
-  // Map analytics.timeseries to the generated buckets, filling missing with zeroes
   const timeBuckets = generateTimeBuckets();
   const timeseriesMap = (analytics?.timeseries || []).reduce(
     (acc: any, entry: any) => {
-      let key;
-      if (timeFrame === "24h") {
-        key = format(new Date(entry.time), "yyyy-MM-dd HH:00");
-      } else {
-        key = format(new Date(entry.time), "yyyy-MM-dd");
-      }
+      const key =
+        timeFrame === "24h"
+          ? format(new Date(entry.time), "yyyy-MM-dd HH:00")
+          : format(new Date(entry.time), "yyyy-MM-dd");
       acc[key] = entry;
       return acc;
     },
     {}
   );
+
   const filledTimeseries = timeBuckets.map((bucket) => {
     const entry = timeseriesMap[bucket];
     return {
@@ -179,321 +143,151 @@ export default function DatabasePage() {
     };
   });
 
-  const chartData = {
-    labels: filledTimeseries.map((d: any) => {
-      if (timeFrame === "24h") {
-        return format(new Date(d.time), "HH:00");
-      } else {
-        return format(new Date(d.time), "MMM d");
-      }
-    }),
-    datasets: [
-      {
-        label: "CREATE",
-        data: filledTimeseries.map((d: any) => d.CREATE),
-        borderColor: "#10b981",
-        backgroundColor: "rgba(16, 185, 129, 0.1)",
-        fill: false,
-        tension: 0.4,
-      },
-      {
-        label: "READ",
-        data: filledTimeseries.map((d: any) => d.READ),
-        borderColor: "#3b82f6",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
-        fill: false,
-        tension: 0.4,
-      },
-      {
-        label: "UPDATE",
-        data: filledTimeseries.map((d: any) => d.UPDATE),
-        borderColor: "#f59e0b",
-        backgroundColor: "rgba(245, 158, 11, 0.1)",
-        fill: false,
-        tension: 0.4,
-      },
-      {
-        label: "DELETE",
-        data: filledTimeseries.map((d: any) => d.DELETE),
-        borderColor: "#ef4444",
-        backgroundColor: "rgba(239, 68, 68, 0.1)",
-        fill: false,
-        tension: 0.4,
-      },
-    ],
+  const chartLabels = filledTimeseries.map((d: any) =>
+    timeFrame === "24h"
+      ? format(new Date(d.time), "HH:00")
+      : format(new Date(d.time), "MMM d")
+  );
+
+  const mainChartData = {
+    labels: chartLabels,
+    datasets: statCards.map((s) => ({
+      label: s.label,
+      data: filledTimeseries.map((d: any) => d[s.key]),
+      borderColor: s.color,
+      backgroundColor: s.color + "18",
+      fill: true,
+      tension: 0.4,
+      borderWidth: 1.5,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+    })),
   };
 
-  const chartOptions = {
+  const mainChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: true,
-        position: "bottom" as const,
-        labels: {
-          color: "#9ca3af",
-          usePointStyle: true,
-          padding: 20,
-        },
-      },
-      title: {
-        display: false,
-      },
+      legend: { display: false },
       crosshair: {
-        line: {
-          color: "#9ca3af",
-          width: 1,
-          dashPattern: [6, 6],
-        },
-        sync: {
-          enabled: false,
-        },
-        zoom: {
-          enabled: false,
-        },
+        line: { color: "rgba(255,255,255,0.1)", width: 1, dashPattern: [4, 4] },
+        sync: { enabled: false },
+        zoom: { enabled: false },
       },
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-          drawBorder: true,
-        },
-        ticks: {
-          color: "#9ca3af",
-        },
+        grid: { display: false },
+        ticks: { color: "#4b5563", font: { size: 11 } },
+        border: { display: false },
       },
       y: {
-        grid: {
-          display: true,
-          borderDash: [6, 6],
-          color: "#9ca3af",
-          drawBorder: true,
-        },
-        ticks: {
-          color: "#9ca3af",
-          maxTicksLimit: 6,
-        },
+        grid: { color: "rgba(255,255,255,0.04)", drawBorder: false },
+        ticks: { color: "#4b5563", font: { size: 11 }, maxTicksLimit: 5 },
+        border: { display: false },
       },
     },
-    interaction: {
-      mode: "index" as const,
-      intersect: false,
+    interaction: { mode: "index" as const, intersect: false },
+  };
+
+  const miniChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    scales: {
+      x: { display: false },
+      y: { display: false },
+    },
+    elements: {
+      point: { radius: 0 },
+      line: { borderWidth: 1.5, tension: 0.4 },
     },
   };
 
   return (
     <>
       <Ttile>{dbMeta?.name || "Database"} - NotDatabase</Ttile>
-      <div className="p-8 w-full">
-        <h1 className="text-2xl font-semibold mb-6">{dbMeta.name}</h1>
+      <div className="p-6 lg:p-10">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold tracking-tight">{dbMeta.name}</h1>
+          <Select value={timeFrame} onValueChange={setTimeFrame}>
+            <SelectTrigger className="w-28 border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-sm h-9 rounded-lg">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24h">24 hours</SelectItem>
+              <SelectItem value="3d">3 days</SelectItem>
+              <SelectItem value="7d">7 days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Analytics Section */}
-        <div className="mb-8 w-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-medium flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Analytics
-            </h2>
-            <Select value={timeFrame} onValueChange={setTimeFrame}>
-              <SelectTrigger className="w-32 border-gray-100/20 bg-transparent text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-900 border-gray-700">
-                <SelectItem value="24h">24 Hours</SelectItem>
-                <SelectItem value="3d">3 Days</SelectItem>
-                <SelectItem value="7d">7 Days</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 col-span-2 lg:col-span-1">
+            <p className="text-xs text-gray-500 mb-1">Total events</p>
+            <p className="text-2xl font-bold text-white tabular-nums">
+              {(analytics?.total || 0).toLocaleString()}
+            </p>
           </div>
-
-          {/* Analytics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 w-full">
-            {/* Total Events */}
-            <Card className="border-gray-100/20 bg-transparent">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-400">
-                  Total Events
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics?.total || 0}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Create Events */}
-            <Card className="border-gray-100/20 bg-transparent">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                  <Plus className="h-4 w-4 text-green-400" />
-                  CREATE
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics?.byAction?.CREATE || 0}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Read Events */}
-            <Card className="border-gray-100/20 bg-transparent">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-blue-400" />
-                  READ
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics?.byAction?.READ || 0}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Update Events */}
-            <Card className="border-gray-100/20 bg-transparent">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                  <Edit className="h-4 w-4 text-yellow-400" />
-                  UPDATE
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics?.byAction?.UPDATE || 0}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Delete Events */}
-            <Card className="border-gray-100/20 bg-transparent">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                  <Trash2 className="h-4 w-4 text-red-400" />
-                  DELETE
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {analytics?.byAction?.DELETE || 0}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Timeseries Chart */}
-            <Card className="border-gray-100/20 bg-transparent col-span-full">
-              <CardHeader>
-                <CardTitle className="text-lg font-medium">
-                  Event Activity Over Time
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-80">
-                {analytics?.timeseries && analytics.timeseries.length > 0 ? (
-                  <Line options={chartOptions} data={chartData} />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    No database events
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="flex items-center gap-x-4 rounded-md col-span-full">
-              {/* Create Events Card */}
-              <Card className="border-gray-100/20 bg-transparent h-64 flex flex-col justify-between w-full">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">
-                    Create Events
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center">
-                  {filledTimeseries.length > 0 &&
-                  filledTimeseries.some((d: any) => d.CREATE > 0) ? (
-                    <Line
-                      options={{
-                        ...chartOptions,
-                        plugins: {
-                          ...chartOptions.plugins,
-                          legend: { display: false },
+          {statCards.map((s) => (
+            <div
+              key={s.key}
+              className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                <p className="text-xs text-gray-500">{s.label}</p>
+              </div>
+              <div className="flex items-end justify-between">
+                <p className="text-2xl font-bold text-white tabular-nums">
+                  {(
+                    analytics?.byAction?.[s.key] || 0
+                  ).toLocaleString()}
+                </p>
+                <div className="w-16 h-8">
+                  <Line
+                    options={miniChartOptions}
+                    data={{
+                      labels: chartLabels,
+                      datasets: [
+                        {
+                          data: filledTimeseries.map((d: any) => d[s.key]),
+                          borderColor: s.color,
+                          backgroundColor: "transparent",
+                          fill: false,
                         },
-                      }}
-                      data={{
-                        labels: filledTimeseries.map((d: any) => {
-                          if (timeFrame === "24h") {
-                            return format(new Date(d.time), "HH:00");
-                          } else {
-                            return format(new Date(d.time), "MMM d");
-                          }
-                        }),
-                        datasets: [
-                          {
-                            label: "CREATE",
-                            data: filledTimeseries.map((d: any) => d.CREATE),
-                            borderColor: "#10b981",
-                            backgroundColor: "rgba(16, 185, 129, 0.1)",
-                            fill: true,
-                            tension: 0.4,
-                          },
-                        ],
-                      }}
-                    />
-                  ) : (
-                    <div className="text-gray-400 text-center">
-                      No database events
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Read Events Card */}
-              <Card className="border-gray-100/20 bg-transparent h-64 flex flex-col justify-between w-full">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">
-                    Read Events
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 flex items-center justify-center">
-                  {filledTimeseries.length > 0 &&
-                  filledTimeseries.some((d: any) => d.READ > 0) ? (
-                    <Line
-                      options={{
-                        ...chartOptions,
-                        plugins: {
-                          ...chartOptions.plugins,
-                          legend: { display: false },
-                        },
-                      }}
-                      data={{
-                        labels: filledTimeseries.map((d: any) => {
-                          if (timeFrame === "24h") {
-                            return format(new Date(d.time), "HH:00");
-                          } else {
-                            return format(new Date(d.time), "MMM d");
-                          }
-                        }),
-                        datasets: [
-                          {
-                            label: "READ",
-                            data: filledTimeseries.map((d: any) => d.READ),
-                            borderColor: "#3b82f6",
-                            backgroundColor: "rgba(59, 130, 246, 0.1)",
-                            fill: true,
-                            tension: 0.4,
-                          },
-                        ],
-                      }}
-                    />
-                  ) : (
-                    <div className="text-gray-400 text-center">
-                      No database events
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                      ],
+                    }}
+                  />
+                </div>
+              </div>
             </div>
+          ))}
+        </div>
+
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-sm font-medium text-white">Activity</h2>
+            <div className="flex items-center gap-4">
+              {statCards.map((s) => (
+                <div key={s.key} className="flex items-center gap-1.5">
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: s.color }}
+                  />
+                  <span className="text-xs text-gray-500">{s.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="h-72">
+            {analytics?.timeseries && analytics.timeseries.length > 0 ? (
+              <Line options={mainChartOptions} data={mainChartData} />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-sm text-gray-600">No events yet</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
