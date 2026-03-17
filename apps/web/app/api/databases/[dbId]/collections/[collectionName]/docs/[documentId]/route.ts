@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
 import { sql } from "@/app/lib/server/db";
+import { logDbEvent } from "@/app/lib/server/log-event";
 
 export async function PATCH(
   req: NextRequest,
@@ -74,6 +75,8 @@ export async function PATCH(
       WHERE db_id = ${dbId} AND collection = ${collectionName} AND key = ${documentId}
     `;
 
+    await logDbEvent({ dbId, collection: collectionName, action: "UPDATE", docId: documentId });
+
     return NextResponse.json(updatedDoc);
   } catch (error) {
     console.error("Error updating document:", error);
@@ -127,6 +130,8 @@ export async function DELETE(
         { status: 404 },
       );
     }
+
+    await logDbEvent({ dbId, collection: collectionName, action: "DELETE", docId: documentId });
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
