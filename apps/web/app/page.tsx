@@ -80,39 +80,37 @@ const db = createClient({
     <>
       <Ttile>NotDatabase</Ttile>
       <Navbar />
-      <div className="pt-16" />
 
-      <div className="p-5">
-        <div className="max-w-7xl mx-auto py-8 border border-gray-200/5 rounded-2xl flex justify-center items-center relative">
-          <div
-            className="overflow-hidden"
-            style={{ aspectRatio: "1 / 1", height: 500 }}
-          >
-            <Cube3D />
-          </div>
-          <div className="absolute w-full h-full bg-black/80 rounded-2xl flex items-center justify-center flex-col">
-            <h1 className="lg:text-7xl text-5xl font-semibold text-white text-center">
-              It's not database, <br /> it's NotDatabase.
+      <section className="relative min-h-[100dvh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-5 w-full grid lg:grid-cols-2 items-center gap-8 pt-24 lg:pt-0">
+          <div className="flex flex-col items-start">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08]">
+              It&apos;s not database,
+              <br />
+              it&apos;s NotDatabase.
             </h1>
-            <p className="text-gray-400 text-center lg:text-xl mt-2">
+
+            <p className="text-gray-400 text-lg lg:text-xl mt-6 max-w-md leading-relaxed">
               The easiest schema-based type-safe document database.
             </p>
-            <div className="flex gap-x-3 mt-6 flex-col lg:flex-row w-full px-4 items-center justify-center gap-2">
-              <div className="flex items-center bg-black/60 rounded-xl px-5 py-2 text-white font-mono text-base shadow-lg border border-gray-200/5 backdrop-blur-md">
-                <span className="opacity-70 select-all">
-                  $ npm install notdb
-                </span>
+
+            <div className="flex flex-col sm:flex-row items-start gap-3 mt-10">
+              <div className="group flex items-center gap-3 bg-white/[0.04] border border-white/[0.08] rounded-xl px-5 py-3 font-mono text-sm text-gray-300 backdrop-blur-sm hover:border-white/[0.15] transition-colors">
+                <span className="text-gray-500">$</span>
+                <span className="select-all">npm install notdb</span>
                 <button
                   onClick={() =>
                     navigator.clipboard.writeText("npm install notdb")
                   }
-                  className="ml-3 p-1 rounded hover:bg-white/10 transition-colors"
+                  className="ml-1 p-1 rounded-md text-gray-500 hover:text-white hover:bg-white/10 transition-colors"
                   title="Copy to clipboard"
                   type="button"
                 >
                   <svg
-                    width="18"
-                    height="18"
+                    width="16"
+                    height="16"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
@@ -125,14 +123,34 @@ const db = createClient({
               </div>
               <Link
                 href="/docs"
-                className="bg-white/10 text-white px-5 py-2 rounded-xl font-medium shadow-lg border border-gray-200/5 hover:bg-white/20 transition-colors backdrop-blur-md"
+                className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-medium text-sm hover:bg-gray-200 transition-colors"
               >
                 Read the docs
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"
+                  />
+                </svg>
               </Link>
             </div>
           </div>
+
+          <div className="w-full aspect-square max-w-[350px] lg:max-w-[420px] mx-auto">
+            <Cube3D />
+          </div>
         </div>
-      </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
