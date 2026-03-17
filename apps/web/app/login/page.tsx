@@ -3,15 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "../lib/auth-client";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import Ttile from "@/components/ttile";
+import { SiGithub, SiGoogle } from "react-icons/si";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState<string | null>(null);
@@ -27,54 +21,61 @@ export default function LoginPage() {
   return (
     <>
       <Ttile>Login - NotDatabase</Ttile>
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
-        <Link href="/">
-          <img src="/logo.png" alt="Logo" className="w-16 h-16 mb-8" />
-        </Link>
-        <div className="w-full max-w-md">
-          <Card className="bg-gray900 border-gray-100/20">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-white">Sign In</CardTitle>
-              <CardDescription className="text-gray-400">
-                Choose your preferred sign-in method
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  onClick={() => handleSocialLogin("google")}
-                  disabled={isLoading !== null}
-                  className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                >
-                  {isLoading === "google"
-                    ? "Signing in..."
-                    : "Continue with Google"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleSocialLogin("github")}
-                  disabled={isLoading !== null}
-                  className="w-full bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                >
-                  {isLoading === "github"
-                    ? "Signing in..."
-                    : "Continue with GitHub"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <div className="mt-6 text-center">
-            <p className="text-gray-400">
-              Don't have an account?{" "}
-              <Link
-                href="/signup"
-                className="text-white hover:text-gray-300 font-medium transition-colors"
-              >
-                Sign up
-              </Link>
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5">
+        <div className="w-full max-w-sm">
+          <div className="flex flex-col items-center mb-10">
+            <Link href="/" className="mb-6">
+              <img
+                src="/logo.png"
+                alt="NotDatabase"
+                className="w-10 h-10 transition-transform duration-300 hover:scale-110"
+              />
+            </Link>
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              Welcome back
+            </h1>
+            <p className="text-gray-500 text-sm mt-1.5">
+              Sign in to your account to continue
             </p>
           </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => handleSocialLogin("google")}
+              disabled={isLoading !== null}
+              className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-white/[0.07] hover:border-white/[0.15] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading === "google" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <SiGoogle className="w-4 h-4" />
+              )}
+              Continue with Google
+            </button>
+
+            <button
+              onClick={() => handleSocialLogin("github")}
+              disabled={isLoading !== null}
+              className="w-full flex items-center justify-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-white/[0.07] hover:border-white/[0.15] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading === "github" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <SiGithub className="w-4 h-4" />
+              )}
+              Continue with GitHub
+            </button>
+          </div>
+
+          <p className="text-center text-sm text-gray-500 mt-8">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="text-white hover:text-gray-300 transition-colors"
+            >
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </>
