@@ -152,76 +152,124 @@ const db = createClient({
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Built for TypeScript devs who get it.
-          </h2>
+      <section className="max-w-5xl mx-auto px-5 py-28">
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight text-center mb-20">
+          Built for TypeScript devs who get it.
+        </h2>
+
+        <div className="space-y-20">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <SiTypescript className="w-6 h-6 text-blue-400" />
+                <h3 className="text-2xl font-semibold text-white">Type Safe</h3>
+              </div>
+              <p className="text-gray-400 leading-relaxed text-[15px]">
+                Full TypeScript support with automatic type inference and
+                compile-time safety. Your schema defines your types — no extra
+                step needed.
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 font-mono text-sm">
+              <div className="flex items-center gap-2 mb-3 text-gray-500 text-xs">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+              </div>
+              <pre className="text-gray-300 overflow-x-auto">
+                <code>
+{`const user = db.users.find("id_123")
+
+// user is fully typed:
+// {
+//   name: string
+//   email: string
+//   age?: number
+// }`}
+                </code>
+              </pre>
+            </div>
+          </div>
+
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div className="order-2 lg:order-1 rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 font-mono text-sm">
+              <div className="flex items-center gap-2 mb-3 text-gray-500 text-xs">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+              </div>
+              <pre className="text-gray-300 overflow-x-auto">
+                <code>
+{`schema: {
+  users: {
+    properties: {
+      name:  { type: "string", required: true },
+      email: { type: "string", unique: true },
+      age:   { type: "number" },
+    },
+  },
+}`}
+                </code>
+              </pre>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="flex items-center gap-3 mb-4">
+                <svg
+                  className="w-6 h-6 text-emerald-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <h3 className="text-2xl font-semibold text-white">Schema Based</h3>
+              </div>
+              <p className="text-gray-400 leading-relaxed text-[15px]">
+                Define your data structure once and get automatic validation and
+                type safety. Your schema is the single source of truth.
+              </p>
+            </div>
+          </div>
+
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <svg
+                  className="w-6 h-6 text-amber-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+                <h3 className="text-2xl font-semibold text-white">Lightning Fast</h3>
+              </div>
+              <p className="text-gray-400 leading-relaxed text-[15px]">
+                Built on top of SQLite with optimized queries and minimal
+                overhead. Reads in microseconds, not milliseconds.
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-8 py-10 flex flex-col items-center justify-center">
+              <span className="text-5xl lg:text-6xl font-bold text-white tracking-tight">&lt;1ms</span>
+              <span className="text-gray-500 text-sm mt-2">average read latency</span>
+            </div>
+          </div>
         </div>
-
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-black/10 p-6 rounded-xl border border-gray-200/5">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4">
-              <SiTypescript className="w-6 h-6 text-blue-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Type Safe</h3>
-            <p className="text-gray-400">
-              Full TypeScript support with automatic type inference and
-              compile-time safety.
-            </p>
-          </div>
-
-          <div className="bg-black/10 p-6 rounded-xl border border-gray-200/5">
-            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4">
-              <svg
-                className="w-6 h-6 text-green-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Schema Based
-            </h3>
-            <p className="text-gray-400">
-              Define your data structure once and get automatic validation and
-              type safety.
-            </p>
-          </div>
-
-          <div className="bg-black/10 p-6 rounded-xl border border-gray-200/5">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
-              <svg
-                className="w-6 h-6 text-purple-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Lightning Fast
-            </h3>
-            <p className="text-gray-400">
-              Built on top of SQLite with optimized queries and minimal
-              overhead.
-            </p>
-          </div>
-        </div>
-      </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
