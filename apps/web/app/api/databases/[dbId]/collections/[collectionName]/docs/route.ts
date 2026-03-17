@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
 import { sql } from "@/app/lib/server/db";
+import { nanoid } from "nanoid";
 
 export async function GET(
   req: NextRequest,
@@ -82,9 +83,10 @@ export async function GET(
       args.push(limit, offset);
 
       const rows = await sql.unsafe(queryStr, args);
-      const docs = rows.map(
-        (row) => (row as unknown as { value: unknown }).value,
-      );
+      const docs = rows.map((row) => {
+        const v = (row as unknown as { value: unknown }).value;
+        return typeof v === "string" ? JSON.parse(v) : v;
+      });
       return NextResponse.json(docs);
     }
 
@@ -97,11 +99,70 @@ export async function GET(
       LIMIT ${limit} OFFSET ${offset}
     `;
 
-    const docs = rows.map((row) => row.value);
+    const docs = rows.map((row) =>
+      typeof row.value === "string" ? JSON.parse(row.value) : row.value,
+    );
 
     return NextResponse.json(docs);
   } catch (error) {
     console.error("Error fetching documents:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ dbId: string; collectionName: string }> },
+) {
+  try {
+    const session = await auth.api.getSession({
+      headers: req.headers,
+    });
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { dbId, collectionName } = await params;
+
+    const owned = await sql`
+      SELECT 1 FROM databases WHERE id = ${dbId} AND user_id = ${session.user.id}
+    `;
+
+    if (owned.length === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const body = await req.json();
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 },
+      );
+    }
+
+    const now = new Date().toISOString();
+    const key = nanoid();
+
+    const doc = {
+      ...body,
+      _id: key,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await sql`
+      INSERT INTO kv_store (id, db_id, collection, key, value, created_at, updated_at)
+      VALUES (${key}, ${dbId}, ${collectionName}, ${key}, ${JSON.stringify(doc)}, ${now}, ${now})
+    `;
+
+    return NextResponse.json(doc, { status: 201 });
+  } catch (error) {
+    console.error("Error creating document:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
