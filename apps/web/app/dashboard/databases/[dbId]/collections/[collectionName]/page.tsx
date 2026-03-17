@@ -1,17 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/app/lib/api-client";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Plus, Loader2, Trash2, Pencil, Copy, Check, X, ChevronDown } from "lucide-react";
 import Ttile from "@/components/ttile";
 
@@ -48,6 +42,146 @@ function fieldsToDoc(fields: KvField[]): Record<string, any> {
     }
   }
   return doc;
+}
+
+const typeOptions: { value: KvField["type"]; label: string; color: string; bg: string; border: string }[] = [
+  { value: "string", label: "str", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+  { value: "number", label: "num", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30" },
+  { value: "boolean", label: "bool", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+];
+
+function Modal({
+  open,
+  onClose,
+  children,
+  width = "max-w-2xl",
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  width?: string;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div
+        className={`relative z-10 w-full ${width} mx-4 rounded-xl border border-white/[0.08] bg-[#0a0a0a] shadow-2xl shadow-black/60`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function TypeDropdown({
+  value,
+  onChange,
+}: {
+  value: KvField["type"];
+  onChange: (type: KvField["type"]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const current = typeOptions.find((o) => o.value === value)!;
+
+  useEffect(() => {
+    if (!open || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 4, left: rect.left });
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        btnRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      )
+        return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div className="shrink-0">
+      <button
+        ref={btnRef}
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen((p) => !p);
+        }}
+        className={`inline-flex items-center gap-1 h-9 rounded-lg border px-2.5 text-xs font-medium transition-colors ${current.border} ${current.bg} ${current.color}`}
+      >
+        {current.label}
+        <ChevronDown className={`h-3 w-3 opacity-60 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="fixed z-[9999] min-w-[5.5rem] rounded-lg border border-white/[0.08] bg-[#1a1a1a] shadow-xl shadow-black/40 py-1"
+            style={{ top: pos.top, left: pos.left }}
+          >
+            {typeOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors hover:bg-white/[0.06] ${
+                  opt.value === value ? "font-medium" : ""
+                }`}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{
+                    backgroundColor:
+                      opt.value === "string" ? "#10b981" : opt.value === "number" ? "#3b82f6" : "#f59e0b",
+                  }}
+                />
+                <span className={opt.color}>{opt.label}</span>
+                {opt.value === value && (
+                  <Check className={`h-3 w-3 ml-auto ${opt.color}`} />
+                )}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
+    </div>
+  );
 }
 
 export default function CollectionPage() {
@@ -179,6 +313,12 @@ export default function CollectionPage() {
     setShowCreateDoc(true);
   };
 
+  const closeDocModal = () => {
+    setShowCreateDoc(false);
+    setEditingDoc(null);
+    resetFields();
+  };
+
   const visibleDocs = (documents || []).filter((doc: any) => !doc._seed);
 
   if (isLoadingDb || isLoadingDocuments) {
@@ -297,220 +437,149 @@ export default function CollectionPage() {
         )}
       </div>
 
-      {/* Create / Edit dialog */}
-      <Dialog
-        open={showCreateDoc || !!editingDoc}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowCreateDoc(false);
-            setEditingDoc(null);
-            resetFields();
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
-          <div className="px-6 pt-6 pb-4">
-            <DialogHeader className="space-y-1 p-0">
-              <DialogTitle className="text-lg">
-                {editingDoc ? "Edit document" : "Add document"}
-              </DialogTitle>
-              <DialogDescription className="text-sm text-gray-500">
-                {editingDoc
-                  ? "Modify the fields below. System fields (_id, timestamps) are managed automatically."
-                  : "Add key-value fields for the new document. An _id will be generated automatically."}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="mt-4 space-y-2 max-h-72 overflow-y-auto pr-1">
-              {fields.map((field, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <input
-                    value={field.key}
-                    onChange={(e) => updateField(i, { key: e.target.value })}
-                    placeholder="key"
-                    spellCheck={false}
-                    className="flex-1 min-w-0 h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm font-mono text-gray-200 focus:outline-none focus:border-white/[0.15] transition-colors placeholder:text-gray-600"
-                  />
-                  <input
-                    value={field.value}
-                    onChange={(e) => updateField(i, { value: e.target.value })}
-                    placeholder="value"
-                    spellCheck={false}
-                    className="flex-[1.5] min-w-0 h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm font-mono text-gray-200 focus:outline-none focus:border-white/[0.15] transition-colors placeholder:text-gray-600"
-                  />
-                  <TypeDropdown
-                    value={field.type}
-                    onChange={(type) => updateField(i, { type })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeField(i)}
-                    disabled={fields.length === 1}
-                    className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-600"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-
+      {/* Create / Edit modal */}
+      <Modal open={showCreateDoc || !!editingDoc} onClose={closeDocModal}>
+        <div className="px-6 pt-6 pb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-lg font-semibold text-white">
+              {editingDoc ? "Edit document" : "Add document"}
+            </h2>
             <button
-              type="button"
-              onClick={addField}
-              className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors py-1"
+              onClick={closeDocModal}
+              className="p-1 rounded-md text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors"
             >
-              <Plus className="h-3 w-3" />
-              Add field
+              <X className="h-4 w-4" />
             </button>
-
-            {fieldError && <p className="mt-2 text-xs text-red-400">{fieldError}</p>}
-            {(createDocMutation.isError || updateDocMutation.isError) && (
-              <p className="mt-2 text-xs text-red-400">
-                {(createDocMutation.error || updateDocMutation.error)?.message}
-              </p>
-            )}
           </div>
-          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06] bg-white/[0.02]">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setShowCreateDoc(false);
-                setEditingDoc(null);
-              }}
-              disabled={isPending}
-              className="rounded-lg"
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSubmitDoc}
-              disabled={isPending}
-              className="rounded-lg px-4"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Saving...
-                </>
-              ) : editingDoc ? (
-                "Save changes"
-              ) : (
-                "Create document"
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          <p className="text-sm text-gray-500 mb-4">
+            {editingDoc
+              ? "Modify the fields below. System fields (_id, timestamps) are managed automatically."
+              : "Add key-value fields for the new document. An _id will be generated automatically."}
+          </p>
 
-      {/* Delete dialog */}
-      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <DialogContent className="sm:max-w-sm p-0 gap-0 overflow-hidden">
-          <div className="px-6 pt-6 pb-4">
-            <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
-              <Trash2 className="h-5 w-5 text-red-400" />
-            </div>
-            <DialogHeader className="space-y-1 p-0">
-              <DialogTitle className="text-lg">Delete document</DialogTitle>
-              <DialogDescription className="text-sm text-gray-500">
-                Are you sure you want to delete this document? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            {deleteTarget && (
-              <p className="mt-3 text-xs text-gray-600 font-mono truncate">
-                ID: {deleteTarget._id}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06] bg-white/[0.02]">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDeleteTarget(null)}
-              disabled={deleteDocMutation.isPending}
-              className="rounded-lg"
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => deleteDocMutation.mutate(deleteTarget._id)}
-              disabled={deleteDocMutation.isPending}
-              className="rounded-lg px-4 bg-red-600 hover:bg-red-700 text-white"
-            >
-              {deleteDocMutation.isPending ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
-const typeOptions: { value: KvField["type"]; label: string; color: string; bg: string; border: string }[] = [
-  { value: "string", label: "str", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  { value: "number", label: "num", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30" },
-  { value: "boolean", label: "bool", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-];
-
-function TypeDropdown({
-  value,
-  onChange,
-}: {
-  value: KvField["type"];
-  onChange: (type: KvField["type"]) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useState<HTMLDivElement | null>(null);
-  const current = typeOptions.find((o) => o.value === value)!;
-
-  return (
-    <div className="relative" ref={(el) => { ref[1] = el; }}>
-      <button
-        type="button"
-        onClick={() => setOpen((p) => !p)}
-        className={`inline-flex items-center gap-1 h-9 rounded-lg border px-2.5 text-xs font-medium transition-colors ${current.border} ${current.bg} ${current.color}`}
-      >
-        {current.label}
-        <ChevronDown className="h-3 w-3 opacity-60" />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 min-w-[5.5rem] rounded-lg border border-white/[0.08] bg-[#1a1a1a] shadow-xl shadow-black/40 py-1 overflow-hidden">
-            {typeOptions.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => {
-                  onChange(opt.value);
-                  setOpen(false);
-                }}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 text-xs transition-colors hover:bg-white/[0.06] ${
-                  opt.value === value ? "font-medium" : ""
-                }`}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${opt.bg.replace("/10", "/60")}`} style={{
-                  backgroundColor: opt.value === "string" ? "#10b981" : opt.value === "number" ? "#3b82f6" : "#f59e0b",
-                }} />
-                <span className={opt.color}>{opt.label}</span>
-                {opt.value === value && (
-                  <Check className={`h-3 w-3 ml-auto ${opt.color}`} />
-                )}
-              </button>
+          <div className="space-y-2 max-h-72 overflow-y-auto">
+            {fields.map((field, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <input
+                  value={field.key}
+                  onChange={(e) => updateField(i, { key: e.target.value })}
+                  placeholder="key"
+                  spellCheck={false}
+                  className="flex-1 min-w-0 h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm font-mono text-gray-200 focus:outline-none focus:border-white/[0.15] transition-colors placeholder:text-gray-600"
+                />
+                <input
+                  value={field.value}
+                  onChange={(e) => updateField(i, { value: e.target.value })}
+                  placeholder="value"
+                  spellCheck={false}
+                  className="flex-[1.5] min-w-0 h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm font-mono text-gray-200 focus:outline-none focus:border-white/[0.15] transition-colors placeholder:text-gray-600"
+                />
+                <TypeDropdown
+                  value={field.type}
+                  onChange={(type) => updateField(i, { type })}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeField(i)}
+                  disabled={fields.length === 1}
+                  className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
             ))}
           </div>
-        </>
-      )}
-    </div>
+
+          <button
+            type="button"
+            onClick={addField}
+            className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors py-1"
+          >
+            <Plus className="h-3 w-3" />
+            Add field
+          </button>
+
+          {fieldError && <p className="mt-2 text-xs text-red-400">{fieldError}</p>}
+          {(createDocMutation.isError || updateDocMutation.isError) && (
+            <p className="mt-2 text-xs text-red-400">
+              {(createDocMutation.error || updateDocMutation.error)?.message}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06] bg-white/[0.02] rounded-b-xl">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={closeDocModal}
+            disabled={isPending}
+            className="rounded-lg"
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSubmitDoc}
+            disabled={isPending}
+            className="rounded-lg px-4"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Saving...
+              </>
+            ) : editingDoc ? (
+              "Save changes"
+            ) : (
+              "Create document"
+            )}
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Delete modal */}
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} width="max-w-sm">
+        <div className="px-6 pt-6 pb-4">
+          <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
+            <Trash2 className="h-5 w-5 text-red-400" />
+          </div>
+          <h2 className="text-lg font-semibold text-white">Delete document</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Are you sure you want to delete this document? This action cannot be undone.
+          </p>
+          {deleteTarget && (
+            <p className="mt-3 text-xs text-gray-600 font-mono truncate">
+              ID: {deleteTarget._id}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06] bg-white/[0.02] rounded-b-xl">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDeleteTarget(null)}
+            disabled={deleteDocMutation.isPending}
+            className="rounded-lg"
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => deleteDocMutation.mutate(deleteTarget._id)}
+            disabled={deleteDocMutation.isPending}
+            className="rounded-lg px-4 bg-red-600 hover:bg-red-700 text-white"
+          >
+            {deleteDocMutation.isPending ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
+          </Button>
+        </div>
+      </Modal>
+    </>
   );
 }
 
