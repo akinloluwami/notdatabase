@@ -66,15 +66,19 @@ export default function DatabasePage() {
   const {
     data: analytics,
     isLoading: isLoadingAnalytics,
+    isFetching: isFetchingAnalytics,
     isError: isErrorAnalytics,
     error: analyticsError,
   } = useQuery({
     queryKey: ["database-analytics", dbId, timeFrame],
     queryFn: () => apiClient.database.getAnalytics(dbId as string, timeFrame),
     enabled: !!dbId,
+    placeholderData: (prev) => prev,
   });
 
-  if (isLoading || isLoadingAnalytics)
+  const analyticsRefreshing = isFetchingAnalytics && !isLoadingAnalytics;
+
+  if (isLoading)
     return (
       <>
         <Ttile>Loading Database - NotDatabase</Ttile>
@@ -84,14 +88,14 @@ export default function DatabasePage() {
       </>
     );
 
-  if (isError || isErrorAnalytics)
+  if (isError)
     return (
       <>
         <Ttile>Error - NotDatabase</Ttile>
         <div className="p-8">
           <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
             <p className="text-sm text-red-400">
-              {((error || analyticsError) as Error).message}
+              {(error as Error).message}
             </p>
           </div>
         </div>
@@ -225,9 +229,13 @@ export default function DatabasePage() {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 col-span-2 lg:col-span-1">
             <p className="text-xs text-gray-500 mb-1">Total events</p>
-            <p className="text-2xl font-bold text-white tabular-nums">
-              {(analytics?.total || 0).toLocaleString()}
-            </p>
+            {analyticsRefreshing ? (
+              <div className="h-8 w-16 rounded-md bg-white/[0.06] animate-pulse" />
+            ) : (
+              <p className="text-2xl font-bold text-white tabular-nums">
+                {(analytics?.total || 0).toLocaleString()}
+              </p>
+            )}
           </div>
           {statCards.map((s) => (
             <div
@@ -239,26 +247,34 @@ export default function DatabasePage() {
                 <p className="text-xs text-gray-500">{s.label}</p>
               </div>
               <div className="flex items-end justify-between">
-                <p className="text-2xl font-bold text-white tabular-nums">
-                  {(
-                    analytics?.byAction?.[s.key] || 0
-                  ).toLocaleString()}
-                </p>
+                {analyticsRefreshing ? (
+                  <div className="h-8 w-12 rounded-md bg-white/[0.06] animate-pulse" />
+                ) : (
+                  <p className="text-2xl font-bold text-white tabular-nums">
+                    {(
+                      analytics?.byAction?.[s.key] || 0
+                    ).toLocaleString()}
+                  </p>
+                )}
                 <div className="w-16 h-8">
-                  <Line
-                    options={miniChartOptions}
-                    data={{
-                      labels: chartLabels,
-                      datasets: [
-                        {
-                          data: filledTimeseries.map((d: any) => d[s.key]),
-                          borderColor: s.color,
-                          backgroundColor: "transparent",
-                          fill: false,
-                        },
-                      ],
-                    }}
-                  />
+                  {analyticsRefreshing ? (
+                    <div className="h-full w-full rounded-md bg-white/[0.04] animate-pulse" />
+                  ) : (
+                    <Line
+                      options={miniChartOptions}
+                      data={{
+                        labels: chartLabels,
+                        datasets: [
+                          {
+                            data: filledTimeseries.map((d: any) => d[s.key]),
+                            borderColor: s.color,
+                            backgroundColor: "transparent",
+                            fill: false,
+                          },
+                        ],
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -281,7 +297,9 @@ export default function DatabasePage() {
             </div>
           </div>
           <div className="h-72">
-            {analytics?.timeseries && analytics.timeseries.length > 0 ? (
+            {analyticsRefreshing ? (
+              <div className="h-full w-full rounded-lg bg-white/[0.04] animate-pulse" />
+            ) : analytics?.timeseries && analytics.timeseries.length > 0 ? (
               <Line options={mainChartOptions} data={mainChartData} />
             ) : (
               <div className="flex items-center justify-center h-full">
