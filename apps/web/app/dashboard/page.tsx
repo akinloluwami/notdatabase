@@ -211,49 +211,69 @@ export default function DashboardPage() {
         </div>
 
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Create database</DialogTitle>
-              <DialogDescription>
-                Give your new database a name.
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
             <form onSubmit={handleCreateDatabase}>
-              {error && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
-                  {error}
+              <div className="px-6 pt-6 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-5">
+                  <Database className="h-5 w-5 text-gray-400" />
                 </div>
-              )}
-              <Input
-                value={dbName}
-                onChange={(e) => setDbName(e.target.value)}
-                placeholder="my-database"
-                disabled={createDatabaseMutation.isPending}
-                className="bg-white/[0.03] border-white/[0.08] focus:border-white/[0.15]"
-                autoFocus
-              />
-              <DialogFooter className="mt-6">
+                <DialogHeader className="space-y-1 p-0">
+                  <DialogTitle className="text-lg">New database</DialogTitle>
+                  <DialogDescription className="text-sm text-gray-500">
+                    This will create a new database and generate an API key.
+                  </DialogDescription>
+                </DialogHeader>
+
+                {error && (
+                  <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <div className="mt-5">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Name
+                  </label>
+                  <Input
+                    value={dbName}
+                    onChange={(e) => setDbName(e.target.value)}
+                    placeholder="my-database"
+                    disabled={createDatabaseMutation.isPending}
+                    className="bg-white/[0.03] border-white/[0.08] focus:border-white/[0.15] h-10"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06] bg-white/[0.02]">
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
                   onClick={() => setIsModalOpen(false)}
                   disabled={createDatabaseMutation.isPending}
+                  className="rounded-lg"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={
                     !dbName.trim() || createDatabaseMutation.isPending
                   }
+                  className="rounded-lg px-4"
                 >
                   {createDatabaseMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Creating...
+                    </>
                   ) : (
-                    "Create"
+                    "Create database"
                   )}
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
