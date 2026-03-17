@@ -118,6 +118,20 @@ export const apiClient = {
     },
   },
   collection: {
+    create: async (dbId: string, name: string) => {
+      const response = await fetch(`/api/databases/${dbId}/collections`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create collection");
+      }
+
+      return response.json();
+    },
     getDocuments: async (
       dbId: string,
       collectionName: string,
@@ -166,6 +180,66 @@ export const apiClient = {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch document");
+      }
+
+      return response.json();
+    },
+    createDocument: async (
+      dbId: string,
+      collectionName: string,
+      data: Record<string, any>
+    ) => {
+      const response = await fetch(
+        `/api/databases/${dbId}/collections/${collectionName}/docs`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create document");
+      }
+
+      return response.json();
+    },
+    updateDocument: async (
+      dbId: string,
+      collectionName: string,
+      documentId: string,
+      data: Record<string, any>
+    ) => {
+      const response = await fetch(
+        `/api/databases/${dbId}/collections/${collectionName}/docs/${documentId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update document");
+      }
+
+      return response.json();
+    },
+    deleteDocument: async (
+      dbId: string,
+      collectionName: string,
+      documentId: string
+    ) => {
+      const response = await fetch(
+        `/api/databases/${dbId}/collections/${collectionName}/docs/${documentId}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete document");
       }
 
       return response.json();
