@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/lib/server/auth";
 import { sql } from "@/app/lib/server/db";
+import { logDbEvent } from "@/app/lib/server/log-event";
 import { nanoid } from "nanoid";
 
 export async function GET(
@@ -87,6 +88,9 @@ export async function GET(
         const v = (row as unknown as { value: unknown }).value;
         return typeof v === "string" ? JSON.parse(v) : v;
       });
+
+      await logDbEvent({ dbId, collection: collectionName, action: "READ" });
+
       return NextResponse.json(docs);
     }
 
@@ -102,6 +106,8 @@ export async function GET(
     const docs = rows.map((row) =>
       typeof row.value === "string" ? JSON.parse(row.value) : row.value,
     );
+
+    await logDbEvent({ dbId, collection: collectionName, action: "READ" });
 
     return NextResponse.json(docs);
   } catch (error) {
@@ -159,6 +165,8 @@ export async function POST(
       INSERT INTO kv_store (id, db_id, collection, key, value, created_at, updated_at)
       VALUES (${key}, ${dbId}, ${collectionName}, ${key}, ${JSON.stringify(doc)}, ${now}, ${now})
     `;
+
+    await logDbEvent({ dbId, collection: collectionName, action: "CREATE", docId: key });
 
     return NextResponse.json(doc, { status: 201 });
   } catch (error) {
