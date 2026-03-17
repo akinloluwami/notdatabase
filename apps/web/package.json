@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@hugeicons/core-free-icons": "^4.0.0",
+    "@hugeicons/react": "^1.1.6",
     "@libsql/client": "^0.15.9",
     "@libsql/kysely-libsql": "^0.4.1",
     "@polar-sh/better-auth": "^1.0.1",
