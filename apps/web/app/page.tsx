@@ -271,61 +271,80 @@ const db = createClient({
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-white mb-4">
+      <section className="max-w-5xl mx-auto px-5 py-28">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
             Simple by Design
           </h2>
+          <p className="text-gray-400 mt-4 text-lg max-w-lg mx-auto">
+            Set up in seconds. Start querying immediately.
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-4">
-          <div className="bg-black/10 p-6 rounded-xl border border-gray-200/5 overflow-x-hidden">
-            <SyntaxHighlighter
-              language="typescript"
-              style={dracula}
-              customStyle={{
-                background: "none",
-                fontSize: "0.875rem",
-                color: "#f8f8f2",
-              }}
-              wrapLines={true}
-            >
-              {notdbsetup}
-            </SyntaxHighlighter>
-          </div>
-
-          <div className="bg-black/10 border border-gray-200/5 rounded-2xl p-6 overflow-x-hidden">
-            <div className="flex flex-wrap gap-2 mb-6">
-              {crud.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveTab(index)}
-                  className={`py-1 px-3 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === index
-                      ? "bg-white/20 text-white border border-white/20"
-                      : "text-gray-400 hover:text-white hover:bg-white/10"
-                  }`}
-                >
-                  {item.title}
-                </button>
-              ))}
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+          <div className="grid lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-white/[0.06]">
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                <span className="text-xs text-gray-500 ml-2 font-mono">setup.ts</span>
+              </div>
+              <SyntaxHighlighter
+                language="typescript"
+                style={dracula}
+                customStyle={{
+                  background: "none",
+                  fontSize: "0.8125rem",
+                  color: "#f8f8f2",
+                  margin: 0,
+                  padding: 0,
+                }}
+                wrapLines={true}
+              >
+                {notdbsetup}
+              </SyntaxHighlighter>
             </div>
 
-            <SyntaxHighlighter
-              language="javascript"
-              style={dracula}
-              customStyle={{
-                background: "none",
-                fontSize: "0.875rem",
-                color: "#f8f8f2",
-              }}
-              wrapLines={true}
-            >
-              {crud[activeTab].code}
-            </SyntaxHighlighter>
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                <div className="ml-2 flex gap-1">
+                  {crud.map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setActiveTab(index)}
+                      className={`px-2.5 py-0.5 rounded-md text-xs font-mono transition-colors ${
+                        activeTab === index
+                          ? "bg-white/10 text-white"
+                          : "text-gray-500 hover:text-gray-300"
+                      }`}
+                    >
+                      {item.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <SyntaxHighlighter
+                language="javascript"
+                style={dracula}
+                customStyle={{
+                  background: "none",
+                  fontSize: "0.8125rem",
+                  color: "#f8f8f2",
+                  margin: 0,
+                  padding: 0,
+                }}
+                wrapLines={true}
+              >
+                {crud[activeTab].code}
+              </SyntaxHighlighter>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <footer className="border-t border-gray-200/5 mt-16">
         <div className="max-w-7xl mx-auto px-4 py-12">
