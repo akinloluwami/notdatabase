@@ -4,7 +4,6 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/app/lib/api-client";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,9 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Key,
   Plus,
   Copy,
   Eye,
@@ -23,8 +22,9 @@ import {
   Trash2,
   Loader2,
   Check,
-  AlertTriangle,
 } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Key01Icon } from "@hugeicons/core-free-icons";
 import Ttile from "@/components/ttile";
 
 export default function ApiKeysPage() {
@@ -36,7 +36,6 @@ export default function ApiKeysPage() {
   const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
-  // Fetch database metadata
   const {
     data: dbMeta,
     isLoading: isLoadingDb,
@@ -48,19 +47,16 @@ export default function ApiKeysPage() {
     enabled: !!dbId,
   });
 
-  // Fetch API keys
   const {
     data: apiKeys,
     isLoading: isLoadingKeys,
     isError: isErrorKeys,
-    error: keysError,
   } = useQuery({
     queryKey: ["api-keys", dbId],
     queryFn: () => apiClient.apiKeys.list(dbId as string),
     enabled: !!dbId,
   });
 
-  // Create API key mutation
   const createKeyMutation = useMutation({
     mutationFn: (name: string) =>
       apiClient.apiKeys.create(dbId as string, name),
@@ -69,20 +65,13 @@ export default function ApiKeysPage() {
       setIsCreateModalOpen(false);
       setNewKeyName("");
     },
-    onError: (err: any) => {
-      console.error("Failed to create API key:", err);
-    },
   });
 
-  // Revoke API key mutation
   const revokeKeyMutation = useMutation({
     mutationFn: (keyId: string) =>
       apiClient.apiKeys.revoke(dbId as string, keyId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["api-keys", dbId] });
-    },
-    onError: (err: any) => {
-      console.error("Failed to revoke API key:", err);
     },
   });
 
@@ -94,55 +83,39 @@ export default function ApiKeysPage() {
   };
 
   const handleCopyKey = async (key: string) => {
-    try {
-      await navigator.clipboard.writeText(key);
-      setCopiedKey(key);
-      setTimeout(() => setCopiedKey(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy key:", err);
-    }
+    await navigator.clipboard.writeText(key);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
   const handleToggleKeyVisibility = (keyId: string) => {
     setVisibleKeys((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(keyId)) {
-        newSet.delete(keyId);
-      } else {
-        newSet.add(keyId);
-      }
-      return newSet;
+      const next = new Set(prev);
+      next.has(keyId) ? next.delete(keyId) : next.add(keyId);
+      return next;
     });
   };
 
   const handleRevokeKey = (keyId: string) => {
-    if (
-      confirm(
-        "Are you sure you want to revoke this API key? This action cannot be undone."
-      )
-    ) {
-      setLoadingKeys((prev) => new Set(prev).add(keyId));
-      revokeKeyMutation.mutate(keyId, {
-        onSettled: () => {
-          setLoadingKeys((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(keyId);
-            return newSet;
-          });
-        },
-      });
-    }
+    if (!confirm("Revoke this API key? This cannot be undone.")) return;
+    setLoadingKeys((prev) => new Set(prev).add(keyId));
+    revokeKeyMutation.mutate(keyId, {
+      onSettled: () => {
+        setLoadingKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(keyId);
+          return next;
+        });
+      },
+    });
   };
 
   if (isLoadingDb) {
     return (
       <>
-        <Ttile>Loading API Keys - NotDatabase</Ttile>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-400">Loading database...</p>
-          </div>
+        <Ttile>API Keys - NotDatabase</Ttile>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
         </div>
       </>
     );
@@ -152,12 +125,10 @@ export default function ApiKeysPage() {
     return (
       <>
         <Ttile>Error - NotDatabase</Ttile>
-        <div className="p-8">
-          <div className="flex items-center gap-2 text-red-400 mb-4">
-            <AlertTriangle className="h-5 w-5" />
-            <span>Error loading database</span>
+        <div className="p-6 lg:p-10">
+          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+            <p className="text-sm text-red-400">{(dbError as Error).message}</p>
           </div>
-          <p className="text-gray-400">{(dbError as Error).message}</p>
         </div>
       </>
     );
@@ -166,11 +137,11 @@ export default function ApiKeysPage() {
   return (
     <>
       <Ttile>API Keys - {dbMeta?.name || "Database"} - NotDatabase</Ttile>
-      <div className="p-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="p-6 lg:p-10">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-semibold mb-2">API Keys</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-bold tracking-tight">API Keys</h1>
+            <p className="text-sm text-gray-500 mt-1">
               Manage API keys for {dbMeta?.name}
             </p>
           </div>
@@ -179,183 +150,204 @@ export default function ApiKeysPage() {
               setIsCreateModalOpen(true);
               setNewKeyName("");
             }}
+            className="rounded-lg"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Create API Key
+            <Plus className="h-4 w-4" />
+            Create key
           </Button>
         </div>
 
-        <div className="space-y-4">
-          {isLoadingKeys ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">Loading API keys...</p>
+        {isLoadingKeys ? (
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 animate-pulse"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="h-4 w-32 rounded bg-white/[0.06]" />
+                  <div className="h-4 w-20 rounded bg-white/[0.06]" />
+                </div>
+                <div className="h-10 w-full rounded-lg bg-white/[0.04]" />
               </div>
-            </div>
-          ) : isErrorKeys ? (
-            <div className="flex items-center gap-2 text-destructive mb-4">
-              <AlertTriangle className="h-5 w-5" />
-              <span>Error loading API keys</span>
-            </div>
-          ) : apiKeys && apiKeys.length > 0 ? (
-            apiKeys.map((key: any) => (
-              <Card key={key.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Key className="h-4 w-4 text-muted-foreground" />
-                      <span>{key.name}</span>
-                      {key.revoked && (
-                        <span className="text-xs bg-destructive/20 text-destructive px-2 py-1 rounded">
-                          Revoked
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!key.revoked && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCopyKey(key.key)}
-                          >
-                            {copiedKey === key.key ? (
-                              <Check className="h-4 w-4" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleToggleKeyVisibility(key.id)}
-                          >
-                            {visibleKeys.has(key.id) ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </>
-                      )}
-                      {!key.revoked && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRevokeKey(key.id)}
-                          className="text-destructive hover:bg-destructive/10"
-                          disabled={loadingKeys.has(key.id)}
-                        >
-                          {loadingKeys.has(key.id) ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {visibleKeys.has(key.id) && !key.revoked ? (
-                      <div className="bg-muted p-3 rounded border">
-                        <code className="text-sm break-all">{key.key}</code>
-                      </div>
-                    ) : (
-                      <div className="bg-muted p-3 rounded border">
-                        <code className="text-sm text-muted-foreground">
-                          {key.revoked
-                            ? "••••••••••••••••••••••••••••••••"
-                            : "••••••••••••••••••••••••••••••••"}
-                        </code>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <span>
-                        Created {new Date(key.createdAt).toLocaleDateString()}
+            ))}
+          </div>
+        ) : isErrorKeys ? (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+            <p className="text-sm text-red-400">Failed to load API keys</p>
+          </div>
+        ) : apiKeys && apiKeys.length > 0 ? (
+          <div className="rounded-xl border border-white/[0.06] overflow-hidden divide-y divide-white/[0.06]">
+            {apiKeys.map((key: any) => (
+              <div
+                key={key.id}
+                className={`p-5 ${key.revoked ? "opacity-50" : ""}`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <HugeiconsIcon
+                      icon={Key01Icon}
+                      size={16}
+                      className="text-gray-500"
+                    />
+                    <span className="text-sm font-medium text-white">
+                      {key.name}
+                    </span>
+                    {key.revoked && (
+                      <span className="text-[11px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 font-medium">
+                        Revoked
                       </span>
-                      {key.lastUsed && (
-                        <span>
-                          Last used{" "}
-                          {new Date(key.lastUsed).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Key className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No API keys yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Create your first API key to start using the database
-                </p>
-                <Button
-                  onClick={() => {
-                    setIsCreateModalOpen(true);
-                    setNewKeyName("");
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create API Key
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                  {!key.revoked && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleToggleKeyVisibility(key.id)}
+                        className="p-1.5 rounded-md text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors"
+                      >
+                        {visibleKeys.has(key.id) ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleCopyKey(key.key)}
+                        className="p-1.5 rounded-md text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors"
+                      >
+                        {copiedKey === key.key ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleRevokeKey(key.id)}
+                        disabled={loadingKeys.has(key.id)}
+                        className="p-1.5 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                      >
+                        {loadingKeys.has(key.id) ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-        {/* Create API Key Modal */}
+                <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2.5">
+                  <code className="text-[13px] break-all text-gray-400 font-mono">
+                    {!key.revoked && visibleKeys.has(key.id)
+                      ? key.key
+                      : "••••••••••••••••••••••••••••••••"}
+                  </code>
+                </div>
+
+                <div className="flex items-center gap-3 mt-2.5 text-[11px] text-gray-600">
+                  <span>
+                    Created {new Date(key.createdAt).toLocaleDateString()}
+                  </span>
+                  {key.lastUsed && (
+                    <>
+                      <span className="text-gray-700">&middot;</span>
+                      <span>
+                        Last used {new Date(key.lastUsed).toLocaleDateString()}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+              <HugeiconsIcon
+                icon={Key01Icon}
+                size={20}
+                className="text-gray-500"
+              />
+            </div>
+            <h3 className="font-medium text-white mb-1">No API keys yet</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Create your first API key to start using the database.
+            </p>
+            <Button
+              onClick={() => {
+                setIsCreateModalOpen(true);
+                setNewKeyName("");
+              }}
+              className="rounded-lg"
+            >
+              <Plus className="h-4 w-4" />
+              Create key
+            </Button>
+          </div>
+        )}
+
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New API Key</DialogTitle>
-            </DialogHeader>
+          <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
             <form onSubmit={handleCreateKey}>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="keyName"
-                    className="block text-sm font-medium mb-2"
-                  >
-                    Key Name
+              <div className="px-6 pt-6 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center mb-5">
+                  <HugeiconsIcon
+                    icon={Key01Icon}
+                    size={20}
+                    className="text-gray-400"
+                  />
+                </div>
+                <DialogHeader className="space-y-1 p-0">
+                  <DialogTitle className="text-lg">Create API key</DialogTitle>
+                  <DialogDescription className="text-sm text-gray-500">
+                    Give your key a name to identify it later.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="mt-5">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Name
                   </label>
                   <Input
-                    id="keyName"
                     value={newKeyName}
                     onChange={(e) => setNewKeyName(e.target.value)}
-                    placeholder="e.g., Production API Key"
+                    placeholder="e.g. Production"
                     disabled={createKeyMutation.isPending}
+                    className="bg-white/[0.03] border-white/[0.08] focus:border-white/[0.15] h-10"
+                    autoFocus
                   />
                 </div>
               </div>
-              <DialogFooter className="mt-6">
+
+              <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06] bg-white/[0.02]">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setIsCreateModalOpen(false)}
                   disabled={createKeyMutation.isPending}
+                  className="rounded-lg"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  disabled={!newKeyName.trim() || createKeyMutation.isPending}
+                  size="sm"
+                  disabled={
+                    !newKeyName.trim() || createKeyMutation.isPending
+                  }
+                  className="rounded-lg px-4"
                 >
                   {createKeyMutation.isPending ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       Creating...
                     </>
                   ) : (
-                    "Create Key"
+                    "Create key"
                   )}
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
