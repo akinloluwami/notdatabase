@@ -34,6 +34,7 @@ export default function ApiKeysPage() {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
+  const [revokeTarget, setRevokeTarget] = useState<{ id: string; name: string } | null>(null);
   const queryClient = useQueryClient();
 
   const {
@@ -96,9 +97,11 @@ export default function ApiKeysPage() {
     });
   };
 
-  const handleRevokeKey = (keyId: string) => {
-    if (!confirm("Revoke this API key? This cannot be undone.")) return;
+  const handleConfirmRevoke = () => {
+    if (!revokeTarget) return;
+    const keyId = revokeTarget.id;
     setLoadingKeys((prev) => new Set(prev).add(keyId));
+    setRevokeTarget(null);
     revokeKeyMutation.mutate(keyId, {
       onSettled: () => {
         setLoadingKeys((prev) => {
@@ -222,7 +225,7 @@ export default function ApiKeysPage() {
                         )}
                       </button>
                       <button
-                        onClick={() => handleRevokeKey(key.id)}
+                        onClick={() => setRevokeTarget({ id: key.id, name: key.name })}
                         disabled={loadingKeys.has(key.id)}
                         className="p-1.5 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                       >
@@ -349,6 +352,41 @@ export default function ApiKeysPage() {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!revokeTarget} onOpenChange={() => setRevokeTarget(null)}>
+          <DialogContent className="sm:max-w-sm p-0 gap-0 overflow-hidden">
+            <div className="px-6 pt-6 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-5">
+                <Trash2 className="h-5 w-5 text-red-400" />
+              </div>
+              <DialogHeader className="space-y-1 p-0">
+                <DialogTitle className="text-lg">Revoke API key</DialogTitle>
+                <DialogDescription className="text-sm text-gray-500">
+                  Are you sure you want to revoke &ldquo;{revokeTarget?.name}&rdquo;?
+                  This action cannot be undone and any requests using this key
+                  will stop working immediately.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-white/[0.06] bg-white/[0.02]">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setRevokeTarget(null)}
+                className="rounded-lg"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmRevoke}
+                className="rounded-lg px-4 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Revoke key
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
